@@ -48,6 +48,9 @@ module Reader: sig (*TODO add sig for parsers and then remove*)
   val hex_char_parser : char list -> sexpr * char list
   val char_parser : char list -> sexpr * char list
   val integer_parser : char list -> sexpr * char list
+  val float_parser : char list -> sexpr * char list
+  val hex_float_parser : char list -> sexpr * char list
+  val hex_integer_parser : char list -> sexpr * char list
 end
 = struct
 let normalize_scheme_symbol str =
@@ -145,27 +148,73 @@ let sign_parser s =
 
 let signed_integer_parser s =
   let integer_helper = PC.pack (PC.caten sign_parser natural_parser ) (fun (temp)-> if ((fst temp) = '-') 
-                                                                                        then Number(Int ((-1)*(snd temp)))
-                                                                                        else Number(Int (snd temp))) in
+                                                                                        then (-1)*(snd temp)
+                                                                                        else snd temp) in
   integer_helper s;;
 
  let not_signed_integer_parser s =
-    PC.pack natural_parser (fun (temp)-> Number(Int(temp))) s;;
+    PC.pack natural_parser (fun (temp)-> temp) s;;
 
-let integer_parser s = (PC.disj signed_integer_parser not_signed_integer_parser) s;;
+let integer_parser s = PC.pack 
+                      (PC.disj signed_integer_parser not_signed_integer_parser)
+                      (fun (temp)-> Number(Int(temp))) s;;
 
 
 (** *************************************HEX***************************************)
 
 let hex_prefix s = PC.pack (PC.word_ci "#x") (fun (temp)-> Nil) s;;
 
-let hex_natural_parser s = PC.pack (PC.plus hex_digit_parser) s;;
+let hex_natural_parser s = PC.pack (PC.plus hex_digit_parser) (fun (temp)-> temp) s;;
 
-(*let not_signed_hex_integer_parser s =
-  PC.pack (PC.caten hex_prefix hex_natural_parser) (fun (temp)-> Number(Int (int_of_string ( "0x" ^ (list_to_string(snd temp)))))) s;;*)
+let not_signed_hex_integer_parser s =
+  PC.pack (PC.caten hex_prefix hex_natural_parser) (fun (temp)-> int_of_string ( "0x" ^ (list_to_string(snd temp)))) s;;
      
+let signed_hex_integer_parser s =
+  PC.pack (PC.caten hex_prefix ( PC.caten sign_parser hex_natural_parser)) (fun (temp)-> if ( (fst(snd temp)) = '+')
+                                                                                                then int_of_string ( "0x" ^ (list_to_string(snd (snd temp))))
+                                                                                                else (-1)* (int_of_string ( "0x" ^ (list_to_string(snd (snd temp))))))
+                                                                                                s;;
 
+let hex_integer_parser s = PC.pack
+                                (PC.disj signed_hex_integer_parser not_signed_hex_integer_parser) 
+                                (fun (temp)-> Number(Int (temp)))
+                                s;;
+
+
+(***************************INTEGER FLOAT******************************* *)
+
+let dot_parser s = PC.pack (PC.char '.') (fun (temp)-> temp) s;;
+
+let not_siged_flaot_parser s = 
+    PC.pack (PC.caten not_signed_integer_parser (PC.caten dot_parser natural_parser))
+    (fun (temp)-> float_of_string( (string_of_int (fst temp))^ "." ^ string_of_int(snd(snd(temp)))))
+    s;;
+
+let siged_flaot_parser s = 
+    PC.pack (PC.caten signed_integer_parser (PC.caten dot_parser natural_parser))
+    (fun (temp)-> float_of_string( (string_of_int (fst temp))^ "." ^ string_of_int(snd(snd(temp)))))  
+    s;;
+
+let float_parser s = PC.pack 
+                    (PC.disj siged_flaot_parser not_siged_flaot_parser)
+                    (fun (temp)-> Number(Float(temp)))
+                     s;; 
+
+
+(********************************HEX FLOAT **************************************** *)
+(** TODO*)
+let not_siged_hex_flaot_parser s = 
+    PC.pack (PC.caten not_signed_hex_integer_parser (PC.caten dot_parser hex_natural_parser))
+    (fun (temp)-> float_of_string( (string_of_int (fst temp))^ "." ^string_of_int(fst(snd(snd(temp))))))
+    s;;
+
+let siged_hex_flaot_parser s = 
+    PC.pack (PC.caten signed_hex_integer_parser (PC.caten dot_parser hex_natural_parser))
+    (fun (temp)-> float_of_string( (string_of_int (fst temp))^ "." ^ string_of_int(fst(snd(snd(temp))))))  
+    s;;
+
+let hex_float_parser s = PC.pack 
+                    (PC.disj siged_hex_flaot_parser not_siged_hex_flaot_parser)
+                    (fun (temp)-> Number(Float(temp)))
+                     s;; 
 end;; (* struct Reader *)
-
-
-
