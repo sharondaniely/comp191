@@ -177,7 +177,7 @@ let symbol_char_digits_parser s =
   let hex_packed = PC.disj number_range_packed (PC.disj lower_case_range_packed upper_case_range_packed) in
   hex_packed s;;
 
-let symbol_char_parser s = (*TODO CHECK WHY THIS IS THE FUNC WE GIVE TO PACK*)
+let symbol_char_parser s =
   let signs_praser = PC.disj_list [PC.char '!'; PC.char '$'; PC.char '^'; PC.char '*'; PC.char '-'; PC.char '_'; PC.char '='; PC.char '+';
   PC.char '<'; PC.char '>'; PC.char '?'; PC.char '/'; PC.char ':'] in
   let signs_packed = PC.pack signs_praser (fun(temp) -> temp) in
