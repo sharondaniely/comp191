@@ -51,6 +51,8 @@ module Reader: sig (*TODO add sig for parsers and then remove*)
   val float_parser : char list -> sexpr * char list
   val hex_float_parser : char list -> sexpr * char list
   val hex_integer_parser : char list -> sexpr * char list
+  val symbol_char_parser : char list -> char * char list
+  val symbol_parser : char list -> sexpr * char list
 end
 = struct
 let normalize_scheme_symbol str =
@@ -218,3 +220,33 @@ let hex_float_parser s = PC.pack
                     (fun (temp)-> Number(Float(temp)))
                      s;; 
 end;; (* struct Reader *)
+(*let not_signed_hex_integer_parser s =
+  PC.pack (PC.caten hex_prefix hex_natural_parser) (fun (temp)-> Number(Int (int_of_string ( "0x" ^ (list_to_string(snd temp)))))) s;;*)
+
+
+let symbol_char_digits_parser s =
+  let number_range_parser = PC.range '0' '9' in
+  let number_range_packed = PC.pack number_range_parser (fun (temp)-> temp) in
+  let lower_case_range_parser = PC.range 'a' 'z' in
+  let lower_case_range_packed = PC.pack lower_case_range_parser (fun (temp)-> temp) in
+  let upper_case_range_parser = PC.range 'A' 'Z' in
+  let upper_case_range_packed = PC.pack upper_case_range_parser (fun (temp)-> temp) in
+  let hex_packed = PC.disj number_range_packed (PC.disj lower_case_range_packed upper_case_range_packed) in
+  hex_packed s;;
+
+let symbol_char_parser s =
+  let signs_praser = PC.disj_list [PC.char '!'; PC.char '$'; PC.char '^'; PC.char '*'; PC.char '-'; PC.char '_'; PC.char '='; PC.char '+';
+  PC.char '<'; PC.char '>'; PC.char '?'; PC.char '/'; PC.char ':'] in
+  let signs_packed = PC.pack signs_praser (fun(temp) -> temp) in
+  let symbol_char_packed = PC.disj symbol_char_digits_parser signs_packed in
+  symbol_char_packed s;;
+
+let symbol_parser s =
+  let symbol_parser = PC.plus symbol_char_parser in
+  let symbol_packed = PC.pack symbol_parser (fun (temp) -> Symbol(list_to_string temp)) in
+  symbol_packed s;; 
+
+end;; (* struct Reader *)
+
+
+
