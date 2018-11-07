@@ -81,6 +81,7 @@ let hex_char_parser s =
 
 
 (*wdklhwljdblwjhwdlhwdlb*)
+(*adi comment*)
 end;; (* struct Reader *)
 
 
