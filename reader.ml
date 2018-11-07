@@ -47,6 +47,7 @@ module Reader: sig (*TODO add sig for parsers and then remove*)
   val hex_digit_parser : char list -> char * char list
   val hex_char_parser : char list -> sexpr * char list
   val char_parser : char list -> sexpr * char list
+  val integer_parser : char list -> sexpr * char list
 end
 = struct
 let normalize_scheme_symbol str =
@@ -68,6 +69,7 @@ let bool_parser s =
   let parsed = PC.disj true_packed false_packed in
   parsed s;;
   
+(** ************************************CHAR*****************************************)
 
 let char_prefix_parser s = 
   let prefix_parser = PC.word "#\\" in
@@ -94,7 +96,6 @@ let hex_digit_parser s =
 
 
 
-(** ************************************CHAR*****************************************)
 
 let named_char_parser s =
   let named_packed = PC.disj_list [
@@ -160,11 +161,9 @@ let hex_prefix s = PC.pack (PC.word_ci "#x") (fun (temp)-> Nil) s;;
 
 let hex_natural_parser s = PC.pack (PC.plus hex_digit_parser) s;;
 
-let not_signed_hex_integer_parser s =
-  PC.pack (PC.caten hex_prefix hex_natural_parser) (fun (temp)-> Number(Int (int_of_string ( "0x" ^ (list_to_string(snd temp)))))) s;;
+(*let not_signed_hex_integer_parser s =
+  PC.pack (PC.caten hex_prefix hex_natural_parser) (fun (temp)-> Number(Int (int_of_string ( "0x" ^ (list_to_string(snd temp)))))) s;;*)
      
-
-
 
 end;; (* struct Reader *)
 
