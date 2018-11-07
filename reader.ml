@@ -80,12 +80,7 @@ let hex_char_parser s =
   let hex_parser = 
 
 
-(*wdklhwljdblwjhwdlhwdlb*)
-<<<<<<< HEAD
-("sharon comment")
-=======
-(*adi comment*)
->>>>>>> 46f7c17c04a9011ed00e423eed82c0fe10bc3664
+
 end;; (* struct Reader *)
 
 
