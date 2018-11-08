@@ -257,41 +257,7 @@ let symbol_parser s =
   symbol_packed s;; 
 
 
-(**************************************LIST******************************* *)
-
-
-let rec sexpr_parser string =
-      PC.pack (PC.disj_list [bool_parser;
-                             char_parser;
-                            number_parser;
-                            string_parser;
-                            symbol_parser;
-                            list_parser])
-        (fun (temp)-> temp)
-        string
-    and list_parser s =
-          let left_par  = PC.word "(" in
-          let right_par = PC.word ")" in
-          let sexpr_star= PC.star sexpr_parser   in 
-          PC.pack (PC.caten left_par (PC.caten sexpr_star right_par)) 
-          (function (left,(lst,right))-> match lst with
-          | []-> Nil
-          | _-> (List.fold_right (fun a b -> Pair (a,b)) lst Nil))
-          s
-      and dotted_list_parser s=
-          let left_par  = PC.word "(" in
-          let right_par = PC.word ")" in
-          let space = word " " in
-          let space_star = star space in
-          let space_plus = plus space in
-          let dot = word " . " in
-          let sexpr_plus= plus sexpr_parser in
-          pack (caten left_par (caten sexpr_plus (caten dot (caten sexpr_parser right_par))))
-          (function (a,(lst,(b,(sexp,c))))-> (List.fold_right (fun a b -> Pair (a,b)) lst sexp)) 
-          s;;
-
-
-
+(**************************************string******************************* *)
 
 
 
@@ -330,6 +296,49 @@ let string_parser s =
     let second_quote_parser = PC.char (char_of_int 34) in
     let string_packed = PC.pack (PC.caten first_quote_parser (PC.caten body_of_string_parser second_quote_parser)) (fun (temp) -> String(fst(snd(temp)))) in
     string_packed s;;
+
+
+
+
+
+
+
+
+
+
+let rec sexpr_parser string =
+      PC.pack (PC.disj_list [bool_parser;
+                             char_parser;
+                            number_parser;
+                            string_parser;
+                            symbol_parser;
+                            list_parser])
+        (fun (temp)-> temp)
+        string
+    and list_parser s =
+          let left_par  = PC.word "(" in
+          let right_par = PC.word ")" in
+          let sexpr_star= PC.star sexpr_parser   in 
+          PC.pack (PC.caten left_par (PC.caten sexpr_star right_par)) 
+          (function (left,(lst,right))-> match lst with
+          | []-> Nil
+          | _-> (List.fold_right (fun a b -> Pair (a,b)) lst Nil))
+          s
+      and dotted_list_parser s=
+          let left_par  = PC.word "(" in
+          let right_par = PC.word ")" in
+          let space = word " " in
+          let space_star = star space in
+          let space_plus = plus space in
+          let dot = word " . " in
+          let sexpr_plus= plus sexpr_parser in
+          pack (caten left_par (caten sexpr_plus (caten dot (caten sexpr_parser right_par))))
+          (function (a,(lst,(b,(sexp,c))))-> (List.fold_right (fun a b -> Pair (a,b)) lst sexp)) 
+          s;;
+
+
+
+
 
 
 
