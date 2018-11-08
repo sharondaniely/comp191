@@ -6,6 +6,7 @@
  *)
 
 #use "pc.ml";;
+open PC (*TODO maybe remove*)
 
 exception X_not_yet_implemented;;
 exception X_this_should_not_happen;;
@@ -54,6 +55,7 @@ module Reader: sig (*TODO add sig for parsers and then remove*)
   val symbol_char_parser : char list -> char * char list
   val symbol_parser : char list -> sexpr * char list
   val number_parser : char list -> sexpr * char list
+  val sexpr_parser: char list -> sexpr * char list
 end
 = struct
 let normalize_scheme_symbol str =
@@ -63,8 +65,7 @@ let normalize_scheme_symbol str =
 	s) then str
   else Printf.sprintf "|%s|" str;;
 
-let read_sexpr string = raise X_not_yet_implemented ;;
-
+let read_sexpr string = raise X_not_yet_implemented;;
 let read_sexprs string = raise X_not_yet_implemented;;
 
 let bool_parser s = 
@@ -250,6 +251,51 @@ let symbol_parser s =
   let symbol_parser = PC.plus symbol_char_parser in
   let symbol_packed = PC.pack symbol_parser (fun (temp) -> Symbol(list_to_string temp)) in
   symbol_packed s;; 
+
+
+(**************************************LIST******************************* *)
+let string_parser = char_parser;; (*TODO delete*)
+
+let rec sexpr_parser string =
+      PC.pack (PC.disj_list [bool_parser;
+                             char_parser;
+                            number_parser;
+                            string_parser;
+                            symbol_parser;
+                            list_parser])
+        (fun (temp)-> temp)
+        string
+    and list_parser s =
+          let left_par  = PC.word "(" in
+          let right_par = PC.word ")" in
+          let sexpr_star= PC.star sexpr_parser   in 
+          PC.pack (PC.caten left_par (PC.caten sexpr_star right_par)) 
+          (function (left,(lst,right))-> match lst with
+          | []-> Nil
+          | _-> (List.fold_right (fun a b -> Pair (a,b)) lst Nil))
+          s
+      and dotted_list_parser s=
+          let left_par  = PC.word "(" in
+          let right_par = PC.word ")" in
+          let space = word " " in
+          let space_star = star space in
+          let space_plus = plus space in
+          let dot = word " . " in
+          let sexpr_plus= plus sexpr_parser in
+          pack (caten left_par (caten sexpr_plus (caten dot (caten sexpr_parser right_par))))
+          (function (a,(lst,(b,(sexp,c))))-> (List.fold_right (fun a b -> Pair (a,b)) lst sexp)) 
+          s;;
+
+
+
+
+
+
+
+
+
+
+
 
 end;; (* struct Reader *)
 
