@@ -49,10 +49,11 @@ module Reader: sig (*TODO add sig for parsers and then remove*)
   val char_parser : char list -> sexpr * char list
   val integer_parser : char list -> sexpr * char list
   val float_parser : char list -> sexpr * char list
-  val hex_float_parser : char list -> sexpr * char list
   val hex_integer_parser : char list -> sexpr * char list
   val symbol_char_parser : char list -> char * char list
   val symbol_parser : char list -> sexpr * char list
+  val string_parser : char list -> sexpr * char list
+  val string_hex_char_parser : char list -> char * char list
 end
 = struct
 let normalize_scheme_symbol str =
@@ -204,24 +205,8 @@ let float_parser s = PC.pack
 
 
 (********************************HEX FLOAT **************************************** *)
-(** TODO*)
-let not_siged_hex_flaot_parser s = 
-    PC.pack (PC.caten not_signed_hex_integer_parser (PC.caten dot_parser hex_natural_parser))
-    (fun (temp)-> float_of_string( (string_of_int (fst temp))^ "." ^string_of_int(fst(snd(snd(temp))))))
-    s;;
 
-let siged_hex_flaot_parser s = 
-    PC.pack (PC.caten signed_hex_integer_parser (PC.caten dot_parser hex_natural_parser))
-    (fun (temp)-> float_of_string( (string_of_int (fst temp))^ "." ^ string_of_int(fst(snd(snd(temp))))))  
-    s;;
 
-let hex_float_parser s = PC.pack 
-                    (PC.disj siged_hex_flaot_parser not_siged_hex_flaot_parser)
-                    (fun (temp)-> Number(Float(temp)))
-                     s;; 
-end;; (* struct Reader *)
-(*let not_signed_hex_integer_parser s =
-  PC.pack (PC.caten hex_prefix hex_natural_parser) (fun (temp)-> Number(Int (int_of_string ( "0x" ^ (list_to_string(snd temp)))))) s;;*)
 
 
 let symbol_char_digits_parser s =
@@ -245,6 +230,50 @@ let symbol_parser s =
   let symbol_parser = PC.plus symbol_char_parser in
   let symbol_packed = PC.pack symbol_parser (fun (temp) -> Symbol(list_to_string temp)) in
   symbol_packed s;; 
+
+
+
+
+let string_literal_char_parser s =
+  let literal_char_parser = PC.const (fun (temp) -> (int_of_char temp) != 92 && (int_of_char temp) != 34) in
+  let literal_char_packed = PC.pack literal_char_parser (fun (temp) -> temp) in
+  literal_char_packed s;;
+
+let string_meta_char_parser s =
+  let meta_char_parser = PC.disj_list [
+    PC.pack (PC.word "\\r") (fun (temp) -> char_of_int(13))
+    ; PC.pack (PC.word "\\n") (fun (temp) -> char_of_int(10))
+    ; PC.pack (PC.word "\\t") (fun (temp) -> char_of_int(9))
+    ; PC.pack (PC.word "\\f") (fun (temp) -> char_of_int(12))
+    ; PC.pack (PC.word "\\\\") (fun (temp) -> char_of_int(92))
+    ; PC.pack (PC.word "\\\"") (fun (temp) -> char_of_int(34))
+  ] in
+  meta_char_parser s;;
+
+
+
+let string_hex_char_parser s = (*TODO CHECK IF NEED TO BE WORD_CI FOR \Xs*)
+  let prefix_parser = PC.word "\\x" in
+  let hex_char_parser = PC.plus hex_digit_parser in
+  let hex_char_packed = PC.pack (PC.caten prefix_parser hex_char_parser) (fun (temp) -> char_of_int(int_of_string ("0x" ^ (list_to_string(snd temp))))) in
+  hex_char_packed s;;
+
+let string_char_parser s =
+  let string_char_packed = PC.disj_list [string_hex_char_parser; string_literal_char_parser; string_meta_char_parser] in
+  string_char_packed s;;
+
+let string_parser s =
+    let first_quote_parser = PC.char (char_of_int 34) in
+    let body_of_string_parser = PC.pack (PC.star string_char_parser) (fun(temp) -> list_to_string(temp)) in
+    let second_quote_parser = PC.char (char_of_int 34) in
+    let string_packed = PC.pack (PC.caten first_quote_parser (PC.caten body_of_string_parser second_quote_parser)) (fun (temp) -> String(fst(snd(temp)))) in
+    string_packed s;;
+
+
+
+
+
+
 
 end;; (* struct Reader *)
 
