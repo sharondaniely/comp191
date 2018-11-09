@@ -71,12 +71,22 @@ let read_sexpr string = raise X_not_yet_implemented;;
 let read_sexprs string = raise X_not_yet_implemented;;
 
 
+let symbol_char_digits_parser s =
+  let number_range_parser = PC.range '0' '9' in
+  let number_range_packed = PC.pack number_range_parser (fun (temp)-> temp) in
+  let lower_case_range_parser = PC.range 'a' 'z' in
+  let lower_case_range_packed = PC.pack lower_case_range_parser (fun (temp)-> temp) in
+  let upper_case_range_parser = PC.range 'A' 'Z' in
+  let upper_case_range_packed = PC.pack upper_case_range_parser (fun (temp)-> temp) in
+  let digits_packed = PC.disj number_range_packed (PC.disj lower_case_range_packed upper_case_range_packed) in
+  digits_packed s;;
+
 let bool_parser s = 
   let false_parser = PC.word_ci "#f" in
   let false_packed = PC.pack false_parser (fun (temp)-> Bool(false)) in
   let true_parser = PC.word_ci "#t" in
   let true_packed = PC.pack true_parser (fun (temp)-> Bool(true)) in
-  let illegal_extention_parser = PC.const (fun(temp) -> (int_of_char temp) > 32) in
+  let illegal_extention_parser = symbol_char_digits_parser in
   let parsed = PC.disj true_packed false_packed in
   let packed = PC.not_followed_by parsed illegal_extention_parser in
   packed s;;
@@ -133,7 +143,7 @@ let hex_char_parser s =
 let char_parser s =
   let parser = PC.caten char_prefix_parser (PC.disj hex_char_parser (PC.disj named_char_parser visible_simple_char_parser) ) in
   let packed = PC.pack parser (fun (temp)-> (snd temp)) in
-  let illegal_extention_parser = PC.const (fun (temp) -> (int_of_char temp) > 32) in
+  let illegal_extention_parser = symbol_char_digits_parser in
   let char_parser_packed = PC.not_followed_by packed illegal_extention_parser in
   char_parser_packed s;;
 
@@ -260,9 +270,7 @@ let symbol_char_parser s =
 let symbol_parser s =
   let symbol_parser = PC.plus symbol_char_parser in
   let symbol_packed = PC.pack symbol_parser (fun (temp) -> Symbol(list_to_string temp)) in
-  let illegal_extention_parser = PC.const (fun (temp) -> (int_of_char temp) > 32) in
-  let packed = PC.not_followed_by symbol_packed illegal_extention_parser in
-  packed s;; 
+  symbol_packed s;; 
 
 
 (**************************************string******************************* *)
@@ -303,7 +311,7 @@ let string_parser s =
     let body_of_string_parser = PC.pack (PC.star string_char_parser) (fun(temp) -> list_to_string(temp)) in
     let second_quote_parser = PC.char (char_of_int 34) in
     let string_packed = PC.pack (PC.caten first_quote_parser (PC.caten body_of_string_parser second_quote_parser)) (fun (temp) -> String(fst(snd(temp)))) in
-    let illegal_extention_parser = PC.const (fun (temp) -> (int_of_char temp) > 32) in
+    let illegal_extention_parser = symbol_char_digits_parser in
     let string_parser_packed = PC.not_followed_by string_packed illegal_extention_parser in
     string_parser_packed s;;
 
