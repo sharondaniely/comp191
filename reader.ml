@@ -57,6 +57,7 @@ module Reader: sig (*TODO add sig for parsers and then remove*)
   val string_hex_char_parser : char list -> char * char list
   val number_parser : char list -> sexpr * char list
   val sexpr_parser: char list -> sexpr * char list
+  val star_white_spaces_parser : char list -> sexpr * char list
 end
 = struct
 let normalize_scheme_symbol str =
@@ -300,41 +301,39 @@ let string_parser s =
 
 
 
+let white_spaces_parser s =
+  let spaces_parser = PC.const (fun (temp) -> (int_of_char temp) < 33) in
+  let spaces_packed = PC.pack spaces_parser (fun (temp) -> temp) in
+  spaces_packed s;;
 
-
-
-
+let star_white_spaces_parser s =
+  let star_white_spaces_packed = PC.pack (PC.star white_spaces_parser) (fun (temp) -> Nil) in
+  star_white_spaces_packed s;;
 
 
 let rec sexpr_parser string =
       PC.pack (PC.disj_list [bool_parser;
-                             char_parser;
+                            char_parser;
                             number_parser;
                             string_parser;
                             symbol_parser;
                             list_parser])
         (fun (temp)-> temp)
         string
-    and list_parser s =
+    and list_parser s = (*TODO check if there could be spaces between the pars*)
           let left_par  = PC.word "(" in
           let right_par = PC.word ")" in
-          let sexpr_star= PC.star sexpr_parser   in 
-          PC.pack (PC.caten left_par (PC.caten sexpr_star right_par)) 
+          let sexpr_with_white_spaces = PC.caten sexpr_parser star_white_spaces_parser in
+          let sexpr_with_white_spaces_packed = PC.pack sexpr_with_white_spaces (fun (temp) -> fst(temp)) in
+          let sexpr_star = PC.star sexpr_with_white_spaces_packed in
+          PC.pack (PC.caten left_par (PC.caten sexpr_star right_par))
           (function (left,(lst,right))-> match lst with
           | []-> Nil
           | _-> (List.fold_right (fun a b -> Pair (a,b)) lst Nil))
-          s
-      and dotted_list_parser s=
-          let left_par  = PC.word "(" in
-          let right_par = PC.word ")" in
-          let space = word " " in
-          let space_star = star space in
-          let space_plus = plus space in
-          let dot = word " . " in
-          let sexpr_plus= plus sexpr_parser in
-          pack (caten left_par (caten sexpr_plus (caten dot (caten sexpr_parser right_par))))
-          (function (a,(lst,(b,(sexp,c))))-> (List.fold_right (fun a b -> Pair (a,b)) lst sexp)) 
           s;;
+
+
+
 
 
 
