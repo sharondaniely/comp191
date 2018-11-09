@@ -311,7 +311,7 @@ let star_white_spaces_parser s =
   star_white_spaces_packed s;;
 
 
-let rec sexpr_parser string =
+(*let rec sexpr_parser string = (*TODO this option is for when there's no need for white spaces before sexpr without the list, check what is right*)
       PC.pack (PC.disj_list [bool_parser;
                             char_parser;
                             number_parser;
@@ -330,7 +330,30 @@ let rec sexpr_parser string =
           (function (left,(lst,right))-> match lst with
           | []-> Nil
           | _-> (List.fold_right (fun a b -> Pair (a,b)) lst Nil))
+          s;;*)
+
+
+
+let rec sexpr_parser string =
+      PC.pack (PC.caten star_white_spaces_parser (PC.caten (PC.disj_list [bool_parser;
+                             char_parser;
+                            number_parser;
+                            string_parser;
+                            symbol_parser;
+                            list_parser]) star_white_spaces_parser))
+        (fun (temp)-> fst(snd(temp)))
+        string
+    and list_parser s =
+          let left_par  = PC.word "(" in
+          let right_par = PC.word ")" in
+          let sexpr_star= PC.star sexpr_parser   in 
+          PC.pack (PC.caten left_par (PC.caten sexpr_star right_par)) 
+          (function (left,(lst,right))-> match lst with
+          | []-> Nil
+          | _-> (List.fold_right (fun a b -> Pair (a,b)) lst Nil))
           s;;
+
+
 
 
 (*let rec sexpr_parser string =
