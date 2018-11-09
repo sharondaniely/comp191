@@ -342,7 +342,8 @@ let rec sexpr_parser string =
                             symbol_parser;
                             list_parser;
                             dotted_list_parser;
-                            vector_parser]) star_white_spaces_parser))
+                            vector_parser;
+                            quoted_parser]) star_white_spaces_parser))
         (fun (temp)-> fst(snd(temp)))
         string
     and list_parser s =
@@ -371,8 +372,12 @@ let rec sexpr_parser string =
           PC.pack (PC.caten hash_par (PC.caten left_par (PC.caten sexpr_star right_par)))
           (function (a,(b,(lst,c))) -> match lst with
           | _ -> Vector(lst))
-          s;;
-
+          s
+    and quoted_parser s =
+        let quote_par = PC.word "'" in
+        PC.pack (PC.caten quote_par sexpr_parser)
+        (fun (a,b) -> Pair(Symbol("quote"), Pair(b, Nil)))
+        s;;
 
 
 
