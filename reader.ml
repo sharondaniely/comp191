@@ -343,7 +343,10 @@ let rec sexpr_parser string =
                             list_parser;
                             dotted_list_parser;
                             vector_parser;
-                            quoted_parser]) star_white_spaces_parser))
+                            quoted_parser;
+                            quasiquote_parser;
+                            unquoted_parser;
+                            unquoted_spliced_parser]) star_white_spaces_parser))
         (fun (temp)-> fst(snd(temp)))
         string
     and list_parser s =
@@ -377,9 +380,22 @@ let rec sexpr_parser string =
         let quote_par = PC.word "'" in
         PC.pack (PC.caten quote_par sexpr_parser)
         (fun (a,b) -> Pair(Symbol("quote"), Pair(b, Nil)))
+        s
+    and quasiquote_parser s =
+        let quasiquote_par = PC.word "`" in
+        PC.pack (PC.caten quasiquote_par sexpr_parser)
+        (fun (a,b) -> Pair(Symbol("quasiquote"), Pair(b, Nil)))
+        s
+    and unquoted_parser s =
+        let unquoted_par = PC.word "," in
+        PC.pack (PC.caten unquoted_par sexpr_parser)
+        (fun (a,b) -> Pair(Symbol("unquote"), Pair(b, Nil)))
+        s
+    and unquoted_spliced_parser s =
+        let unquoted_spliced_par = PC.word ",@" in
+        PC.pack (PC.caten unquoted_spliced_par sexpr_parser)
+        (fun (a,b) -> Pair(Symbol("unquote-splicing"), Pair(b, Nil)))
         s;;
-
-
 
 
 
