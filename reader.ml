@@ -330,9 +330,9 @@ let line_comments_parser s =
   line_comments_packed s;;
 
 
-let disj_stars_line_comments_white_spaces s =
+(*let disj_stars_line_comments_white_spaces s =
   let disj_stars_packed = PC.pack (PC.star (PC.disj line_comments_parser white_spaces_parser)) (fun(temp) -> Nil) in
-  disj_stars_packed s;;
+  disj_stars_packed s;;*)
 
 
 (*let rec sexpr_parser string = (*TODO this option is for when there's no need for white spaces before sexpr without the list, check what is right*)
@@ -359,7 +359,7 @@ let disj_stars_line_comments_white_spaces s =
 
 
 let rec sexpr_parser string =
-      PC.pack (PC.caten disj_stars_line_comments_white_spaces (PC.caten (PC.disj_list [bool_parser;
+      PC.pack (PC.caten disj_stars_comments_white_spaces (PC.caten (PC.disj_list [bool_parser;
                              char_parser;
                             number_parser;
                             string_parser;
@@ -370,7 +370,8 @@ let rec sexpr_parser string =
                             quoted_parser;
                             quasiquote_parser;
                             unquoted_parser;
-                            unquoted_spliced_parser]) disj_stars_line_comments_white_spaces))
+                            unquoted_spliced_parser;
+                            sexpr_comments_parser]) disj_stars_comments_white_spaces))
        (fun (temp)-> fst(snd(temp)))
         string
     and list_parser s =
@@ -419,16 +420,35 @@ let rec sexpr_parser string =
          let unquoted_spliced_par = PC.word ",@" in
          PC.pack (PC.caten unquoted_spliced_par sexpr_parser)
          (fun (a,b) -> Pair(Symbol("unquote-splicing"), Pair(b, Nil)))
+         s
+    and sexpr_comments_parser s =
+        let prefix_par = PC.word "#;" in
+        let prefix_pack = PC.pack prefix_par (fun (temp) -> Nil) in
+        PC.pack (PC.caten prefix_par sexpr_parser) (fun (temp) -> Nil)
+        s
+    and disj_stars_comments_white_spaces s =
+         PC.pack (PC.star (PC.disj sexpr_comments_parser (PC.disj line_comments_parser white_spaces_parser))) (fun(temp) -> Nil)
          s;;
+
+
+
+
+
+
+
+
+
+
     (*and sexpr_comments_parser s =
          let prefix_par = PC.word "#;" in
+         let prefix_pack = PC.pack prefix_par (fun (temp) -> Nil) in
          let single_sexpr_comments_par = PC.caten prefix_par sexpr_parser in
          let single_sexpr_comments_pack = PC.pack single_sexpr_comments_par (fun (temp) -> Nil) in
-         let rec compund_sexpr_comments_par = PC.caten prefix_par (PC.caten compund_sexpr_comments_par sexpr_parser) in
-         let compund_sexpr_comments_pack = PC.pack compund_sexpr_comments_par (fun (temp) -> Nil) in
-         let sexpr_comments_par = PC.disj compund_sexpr_comments_par single_sexpr_comments_par in
-         let sexpr_comments_pack = PC.pack sexpr_comments_par (fun (temp) -> Nil) in
-         sexpr_comments_pack s;;*)
+         let rec compund_sexpr_comments_pack = PC.pack compund_sexpr_comments_par (fun(temp) -> Nil)
+         and compund_sexpr_comments_par = PC.caten prefix_pack (PC.caten compund_sexpr_comments_pack sexpr_parser)
+         and sexpr_comments_par = let sexpr_comment_par = PC.disj compund_sexpr_comments_pack single_sexpr_comments_pack in
+         PC.pack sexpr_comment_par (fun (temp) -> Nil)
+         s;;*)
 
 
 
