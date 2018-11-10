@@ -430,28 +430,6 @@ let rec sexpr_parser string =
          PC.pack (PC.star (PC.disj sexpr_comments_parser (PC.disj line_comments_parser white_spaces_parser))) (fun(temp) -> Nil)
          s;;
 
-
-
-
-
-
-
-
-
-
-    (*and sexpr_comments_parser s =
-         let prefix_par = PC.word "#;" in
-         let prefix_pack = PC.pack prefix_par (fun (temp) -> Nil) in
-         let single_sexpr_comments_par = PC.caten prefix_par sexpr_parser in
-         let single_sexpr_comments_pack = PC.pack single_sexpr_comments_par (fun (temp) -> Nil) in
-         let rec compund_sexpr_comments_pack = PC.pack compund_sexpr_comments_par (fun(temp) -> Nil)
-         and compund_sexpr_comments_par = PC.caten prefix_pack (PC.caten compund_sexpr_comments_pack sexpr_parser)
-         and sexpr_comments_par = let sexpr_comment_par = PC.disj compund_sexpr_comments_pack single_sexpr_comments_pack in
-         PC.pack sexpr_comment_par (fun (temp) -> Nil)
-         s;;*)
-
-
-
 end;; (* struct Reader *)
 
 
