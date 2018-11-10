@@ -314,12 +314,9 @@ let string_parser s =
 
 let white_spaces_parser s =
   let spaces_parser = PC.const (fun (temp) -> (int_of_char temp) < 33) in
-  let spaces_packed = PC.pack spaces_parser (fun (temp) -> temp) in
+  let spaces_packed = PC.pack spaces_parser (fun (temp) -> Nil) in
   spaces_packed s;;
 
-let star_white_spaces_parser s =
-  let star_white_spaces_packed = PC.pack (PC.star white_spaces_parser) (fun (temp) -> Nil) in
-  star_white_spaces_packed s;;
 
 let line_comments_parser s =
   let semicolon_parser = PC.word ";" in
@@ -333,9 +330,10 @@ let line_comments_parser s =
   let line_comments_packed = PC.pack line_comment_parser (fun (temp) -> Nil) in
   line_comments_packed s;;
 
-let star_line_comments_parser s =
-  let star_line_comments_packed = PC.pack (PC.star line_comments_parser) (fun (temp) -> Nil) in
-  star_line_comments_packed s;;
+
+let disj_stars_line_comments_white_spaces s =
+  let disj_stars_packed = PC.pack (PC.star (PC.disj line_comments_parser white_spaces_parser)) (fun(temp) -> Nil) in
+  disj_stars_packed s;;
 
 
 (*let rec sexpr_parser string = (*TODO this option is for when there's no need for white spaces before sexpr without the list, check what is right*)
@@ -362,7 +360,7 @@ let star_line_comments_parser s =
 
 
 let rec sexpr_parser string =
-      PC.pack (PC.caten star_line_comments_parser (PC.caten star_white_spaces_parser (PC.caten (PC.disj_list [bool_parser;
+      PC.pack (PC.caten disj_stars_line_comments_white_spaces (PC.caten (PC.disj_list [bool_parser;
                              char_parser;
                             number_parser;
                             string_parser;
@@ -373,8 +371,8 @@ let rec sexpr_parser string =
                             quoted_parser;
                             quasiquote_parser;
                             unquoted_parser;
-                            unquoted_spliced_parser]) (PC.caten star_white_spaces_parser star_line_comments_parser))))
-        (fun (temp)-> fst(snd(snd(temp))))
+                            unquoted_spliced_parser]) disj_stars_line_comments_white_spaces))
+       (fun (temp)-> fst(snd(temp)))
         string
     and list_parser s =
           let left_par  = PC.word "(" in
@@ -404,25 +402,34 @@ let rec sexpr_parser string =
           | _ -> Vector(lst))
           s
     and quoted_parser s =
-        let quote_par = PC.word "'" in
-        PC.pack (PC.caten quote_par sexpr_parser)
-        (fun (a,b) -> Pair(Symbol("quote"), Pair(b, Nil)))
-        s
+         let quote_par = PC.word "'" in
+         PC.pack (PC.caten quote_par sexpr_parser)
+         (fun (a,b) -> Pair(Symbol("quote"), Pair(b, Nil)))
+         s
     and quasiquote_parser s =
-        let quasiquote_par = PC.word "`" in
-        PC.pack (PC.caten quasiquote_par sexpr_parser)
-        (fun (a,b) -> Pair(Symbol("quasiquote"), Pair(b, Nil)))
-        s
+         let quasiquote_par = PC.word "`" in
+         PC.pack (PC.caten quasiquote_par sexpr_parser)
+         (fun (a,b) -> Pair(Symbol("quasiquote"), Pair(b, Nil)))
+         s
     and unquoted_parser s =
-        let unquoted_par = PC.word "," in
-        PC.pack (PC.caten unquoted_par sexpr_parser)
-        (fun (a,b) -> Pair(Symbol("unquote"), Pair(b, Nil)))
-        s
+         let unquoted_par = PC.word "," in
+         PC.pack (PC.caten unquoted_par sexpr_parser)
+         (fun (a,b) -> Pair(Symbol("unquote"), Pair(b, Nil)))
+         s
     and unquoted_spliced_parser s =
-        let unquoted_spliced_par = PC.word ",@" in
-        PC.pack (PC.caten unquoted_spliced_par sexpr_parser)
-        (fun (a,b) -> Pair(Symbol("unquote-splicing"), Pair(b, Nil)))
-        s;;
+         let unquoted_spliced_par = PC.word ",@" in
+         PC.pack (PC.caten unquoted_spliced_par sexpr_parser)
+         (fun (a,b) -> Pair(Symbol("unquote-splicing"), Pair(b, Nil)))
+         s;;
+    (*and sexpr_comments_parser s =
+         let prefix_par = PC.word "#;" in
+         let single_sexpr_comments_par = PC.caten prefix_par sexpr_parser in
+         let single_sexpr_comments_pack = PC.pack single_sexpr_comments_par (fun (temp) -> Nil) in
+         let rec compund_sexpr_comments_par = PC.caten prefix_par (PC.caten compund_sexpr_comments_par sexpr_parser) in
+         let compund_sexpr_comments_pack = PC.pack compund_sexpr_comments_par (fun (temp) -> Nil) in
+         let sexpr_comments_par = PC.disj compund_sexpr_comments_par single_sexpr_comments_par in
+         let sexpr_comments_pack = PC.pack sexpr_comments_par (fun (temp) -> Nil) in
+         sexpr_comments_pack s;;*)
 
 
 
