@@ -321,6 +321,18 @@ let star_white_spaces_parser s =
   let star_white_spaces_packed = PC.pack (PC.star white_spaces_parser) (fun (temp) -> Nil) in
   star_white_spaces_packed s;;
 
+let line_comments_parser s = (*TODO add end of input*)
+  let semicolon_parser = PC.word ";" in
+  let body_of_comment_parser = PC.star (PC.const (fun(temp) -> (int_of_char temp) != 10)) in
+  let end_of_comment_parser = PC.const (fun (temp) -> (int_of_char temp) = 10) in
+  let line_comment_parser = PC.caten semicolon_parser (PC.caten body_of_comment_parser end_of_comment_parser) in
+  let line_comments_packed = PC.pack line_comment_parser (fun (temp) -> Nil) in
+  line_comments_packed s;;
+
+let star_line_comments_parser s =
+  let star_line_comments_packed = PC.pack (PC.star line_comments_parser) (fun (temp) -> Nil) in
+  star_line_comments_packed s;;
+
 
 (*let rec sexpr_parser string = (*TODO this option is for when there's no need for white spaces before sexpr without the list, check what is right*)
       PC.pack (PC.disj_list [bool_parser;
@@ -346,7 +358,7 @@ let star_white_spaces_parser s =
 
 
 let rec sexpr_parser string =
-      PC.pack (PC.caten star_white_spaces_parser (PC.caten (PC.disj_list [bool_parser;
+      PC.pack (PC.caten star_line_comments_parser (PC.caten star_white_spaces_parser (PC.caten (PC.disj_list [bool_parser;
                              char_parser;
                             number_parser;
                             string_parser;
@@ -357,8 +369,8 @@ let rec sexpr_parser string =
                             quoted_parser;
                             quasiquote_parser;
                             unquoted_parser;
-                            unquoted_spliced_parser]) star_white_spaces_parser))
-        (fun (temp)-> fst(snd(temp)))
+                            unquoted_spliced_parser]) (PC.caten star_white_spaces_parser star_line_comments_parser))))
+        (fun (temp)-> fst(snd(snd(temp))))
         string
     and list_parser s =
           let left_par  = PC.word "(" in
@@ -407,7 +419,6 @@ let rec sexpr_parser string =
         PC.pack (PC.caten unquoted_spliced_par sexpr_parser)
         (fun (a,b) -> Pair(Symbol("unquote-splicing"), Pair(b, Nil)))
         s;;
-
 
 
 
