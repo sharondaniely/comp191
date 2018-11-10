@@ -231,7 +231,7 @@ let float_parser s = PC.pack
                      s;; 
 
 
-(********************************HEX FLOAT **************************************** *)
+
 
 
 (********************************HEX FLOAT *****************************************)
@@ -250,11 +250,41 @@ let hex_float_parser s = PC.pack
                     (PC.disj siged_hex_flaot_parser not_siged_hex_flaot_parser)
                     (fun (temp)-> Number(Float(temp)))
                      s;; 
+(**************************************************** *)
+let scientific_float_parser_helper string =
+  pack (caten (disj siged_flaot_parser not_siged_flaot_parser)
+        (caten (word_ci "e") (disj signed_integer_parser not_signed_integer_parser))) 
+  (fun (temp) -> ((fst temp)*.(10.0**(float_of_int(snd(snd temp))))))
+  string;;
+
+
+let scientific_float_parser string =
+  pack scientific_float_parser_helper
+  (fun (temp) -> if (temp = float_of_int(int_of_float(temp)))
+  then Number(Int(int_of_float(temp)))
+  else Number(Float(temp)))
+  string;;
+
+let scientific_int_parser_helper string =
+  pack (caten (disj signed_integer_parser not_signed_integer_parser)
+        (caten (word_ci "e") (disj signed_integer_parser not_signed_integer_parser))) 
+  (fun (temp) -> (float_of_int(fst temp))*.(10.0**(float_of_int(snd(snd temp))))) 
+  string;;
+
+
+let scientific_int_parser string =
+  pack scientific_int_parser_helper
+  (fun (temp) -> if (temp = float_of_int(int_of_float(temp)))
+  then Number(Int(int_of_float(temp)))
+  else Number(Float(temp)))
+  string;;
 
 
 
-
-let number_parser = PC.disj_list [ hex_float_parser ; float_parser ; hex_integer_parser ; integer_parser];;
+let number_parser string  = 
+  let illegal_extention_parser = symbol_char_parser in
+  PC.not_followed_by (PC.disj_list [ hex_float_parser ; scientific_float_parser; float_parser ; hex_integer_parser ; scientific_int_parser; integer_parser]) illegal_extention_parser 
+  string;;
 
 
 
