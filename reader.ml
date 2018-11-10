@@ -330,34 +330,6 @@ let line_comments_parser s =
   line_comments_packed s;;
 
 
-(*let disj_stars_line_comments_white_spaces s =
-  let disj_stars_packed = PC.pack (PC.star (PC.disj line_comments_parser white_spaces_parser)) (fun(temp) -> Nil) in
-  disj_stars_packed s;;*)
-
-
-(*let rec sexpr_parser string = (*TODO this option is for when there's no need for white spaces before sexpr without the list, check what is right*)
-      PC.pack (PC.disj_list [bool_parser;
-                            char_parser;
-                            number_parser;
-                            string_parser;
-                            symbol_parser;
-                            list_parser])
-        (fun (temp)-> temp)
-        string
-    and list_parser s =
-          let left_par  = PC.word "(" in
-          let right_par = PC.word ")" in
-          let sexpr_with_white_spaces = PC.caten star_white_spaces_parser (PC.caten sexpr_parser star_white_spaces_parser) in
-          let sexpr_with_white_spaces_packed = PC.pack sexpr_with_white_spaces (fun (temp) -> fst(snd(temp))) in
-          let sexpr_star = PC.star sexpr_with_white_spaces_packed in
-          PC.pack (PC.caten left_par (PC.caten sexpr_star right_par))
-          (function (left,(lst,right))-> match lst with
-          | []-> Nil
-          | _-> (List.fold_right (fun a b -> Pair (a,b)) lst Nil))
-          s;;*)
-
-
-
 let rec sexpr_parser string =
       PC.pack (PC.caten disj_stars_comments_white_spaces (PC.caten (PC.disj_list [bool_parser;
                              char_parser;
@@ -449,6 +421,13 @@ let rec sexpr_parser string =
     and disj_stars_comments_white_spaces s =
          PC.pack (PC.star (PC.disj sexpr_comments_parser (PC.disj line_comments_parser white_spaces_parser))) (fun(temp) -> Nil)
          s;;
+
+(*Starting to work on 4.3*)
+(*and close_all_parser s =
+    let left_par = PC.disj ((PC.word "(") (PC.word "[")) in
+    let right_par = PC.disj ((PC.word ")") (PC.word "]")) in
+    let close_all_par = PC.word "..." in
+    let rec first_parser = PC.caten ()*)
 
 end;; (* struct Reader *)
 
