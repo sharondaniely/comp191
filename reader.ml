@@ -57,7 +57,6 @@ module Reader: sig (*TODO add sig for parsers and then remove*)
   val string_hex_char_parser : char list -> char * char list
   val number_parser : char list -> sexpr * char list
   val sexpr_parser: char list -> sexpr * char list
-  val star_white_spaces_parser : char list -> sexpr * char list
 end
 = struct
 let normalize_scheme_symbol str =
