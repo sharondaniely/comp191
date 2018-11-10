@@ -321,11 +321,15 @@ let star_white_spaces_parser s =
   let star_white_spaces_packed = PC.pack (PC.star white_spaces_parser) (fun (temp) -> Nil) in
   star_white_spaces_packed s;;
 
-let line_comments_parser s = (*TODO add end of input*)
+let line_comments_parser s =
   let semicolon_parser = PC.word ";" in
   let body_of_comment_parser = PC.star (PC.const (fun(temp) -> (int_of_char temp) != 10)) in
   let end_of_comment_parser = PC.const (fun (temp) -> (int_of_char temp) = 10) in
-  let line_comment_parser = PC.caten semicolon_parser (PC.caten body_of_comment_parser end_of_comment_parser) in
+  let everything_parser = PC.const (fun (temp) -> (int_of_char temp) > -1 ) in
+  let end_of_input_parser = PC.not_followed_by (PC.word "") everything_parser in
+  let end_of_input_packed = PC.pack end_of_input_parser (fun (temp) -> 'a') in
+  let disj_end_of_comment_parser = PC.disj end_of_comment_parser end_of_input_packed in
+  let line_comment_parser = PC.caten semicolon_parser (PC.caten body_of_comment_parser disj_end_of_comment_parser) in
   let line_comments_packed = PC.pack line_comment_parser (fun (temp) -> Nil) in
   line_comments_packed s;;
 
