@@ -66,8 +66,9 @@ let normalize_scheme_symbol str =
 	s) then str
   else Printf.sprintf "|%s|" str;;
 
-let read_sexpr string = raise X_not_yet_implemented;;
-let read_sexprs string = raise X_not_yet_implemented;;
+(*let read_sexpr string = raise X_not_yet_implemented;;*)
+(*let read_sexprs string = raise X_not_yet_implemented;;*)
+
 
 
 let symbol_char_digits_parser s =
@@ -463,6 +464,14 @@ let rec sexpr_parser string =
     let right_par = PC.disj ((PC.word ")") (PC.word "]")) in
     let close_all_par = PC.word "..." in
     let rec first_parser = PC.caten ()*)
+
+let read_sexpr string =
+    let (e, s) = (sexpr_parser (string_to_list string)) in
+    e;;
+
+let read_sexprs string =
+    let (lst, s) = ((PC.star sexpr_parser) (string_to_list string)) in
+    lst;;
 
 end;; (* struct Reader *)
 
