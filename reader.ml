@@ -359,8 +359,9 @@ let string_meta_char_parser s =
 
 let string_hex_char_parser s = (*TODO CHECK IF NEED TO BE WORD_CI FOR \Xs*)
   let prefix_parser = PC.word_ci "\\x" in
+  let closing_parser = PC.word ";" in
   let hex_char_parser = PC.plus hex_digit_parser in
-  let hex_char_packed = PC.pack (PC.caten prefix_parser hex_char_parser) (fun (temp) -> char_of_int(int_of_string ("0x" ^ (list_to_string(snd temp))))) in
+  let hex_char_packed = PC.pack (PC.caten prefix_parser (PC.caten hex_char_parser closing_parser)) (fun (temp) -> char_of_int(int_of_string ("0x" ^ (list_to_string(fst(snd temp)))))) in
   hex_char_packed s;;
 
 let string_char_parser s =
