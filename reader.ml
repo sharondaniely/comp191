@@ -403,7 +403,7 @@ let line_comments_parser s =
   line_comments_packed s;;
 
 let rec sexpr_parser string =
-      PC.pack (PC.caten disj_stars_comments_white_spaces (PC.caten (PC.disj_list [bool_parser;
+      PC.pack (PC.caten disj_stars_comments_white_spaces (PC.caten (PC.disj_list [s_parser;bool_parser;
                              char_parser;
                             number_parser;
                             string_parser;
@@ -417,8 +417,8 @@ let rec sexpr_parser string =
                             quasiquote_parser;
                             unquoted_parser;
                             unquoted_spliced_parser;
-                            sexpr_comments_parser;
-                            s_parser]) disj_stars_comments_white_spaces))
+                            sexpr_comments_parser
+                            ]) disj_stars_comments_white_spaces))
        (fun (temp)-> fst(snd(temp)))
         string
     and list_parser s =
@@ -494,18 +494,19 @@ let rec sexpr_parser string =
          PC.pack (PC.star (PC.disj sexpr_comments_parser (PC.disj line_comments_parser white_spaces_parser))) (fun(temp) -> Nil)
          s
     and a_parser s =
-        PC.disj_list [PC.diff sexpr_parser s_parser; dl_parser; sdl_parser; l_parser; sl_parser; v_parser]
-        s
+         pack (caten (disj_stars_comments_white_spaces)
+        (caten (PC.disj_list [PC.diff sexpr_parser s_parser; dl_parser; sdl_parser; l_parser; sl_parser; v_parser]) (disj_stars_comments_white_spaces)))
+        (function (a,(b,c)) -> b) s
     and s_parser s =
         let three_dots_par = PC.word "..." in
-        let s_par = PC.caten (PC.disj_list [dl_parser; sdl_parser; l_parser; sl_parser; v_parser]) three_dots_par in
-        PC.pack s_par (fun (temp) -> fst(temp))
+        let s_par = (caten (PC.caten (PC.disj_list [dl_parser; sdl_parser; l_parser; sl_parser; v_parser])disj_stars_comments_white_spaces )three_dots_par) in
+        PC.pack s_par (function ((sexp,dots),spaces) -> sexp)
         s
     and l_parser s =
         let open_par = PC.word "(" in
         let close_par = PC.word ")" in
         let l_par = PC.caten open_par (PC.caten (PC.star a_parser) (PC.maybe close_par)) in
-        PC.pack l_par (fun(a, (lst,b)) -> match lst with
+        PC.pack l_par (function(a, (lst,b)) -> match lst with
         | [] -> Nil
         | _ -> List.fold_right (fun a b -> Pair(a,b)) lst Nil)
         s
@@ -513,7 +514,7 @@ let rec sexpr_parser string =
         let open_par = PC.word "[" in
         let close_par = PC.word "]" in
         let l_par = PC.caten open_par (PC.caten (PC.star a_parser) (PC.maybe close_par)) in
-        PC.pack l_par (fun(a, (lst,b)) -> match lst with
+        PC.pack l_par (function(a, (lst,b)) -> match lst with
         | [] -> Nil
         | _ -> List.fold_right (fun a b -> Pair(a,b)) lst Nil)
         s
@@ -521,24 +522,24 @@ let rec sexpr_parser string =
         let open_par = PC.word "(" in
         let dot_par = PC.word "." in
         let close_par = PC.word ")" in
-        let dl_par = PC.caten open_par (PC.caten (PC.plus a_parser) (PC.caten dot_par (PC.caten a_parser (maybe close_par)))) in
-        PC.pack dl_par (fun (first, (lst, (dot, (e, last)))) -> match lst with
+        let dl_par = PC.caten open_par (PC.caten (PC.plus a_parser) (PC.caten dot_par (PC.caten a_parser (PC.maybe close_par)))) in
+        PC.pack dl_par (function (first, (lst, (dot, (e, last)))) -> match lst with
         | _ -> List.fold_right (fun a b -> Pair(a,b)) lst e)
         s
     and sdl_parser s =
         let open_par = PC.word "[" in
         let dot_par = PC.word "." in
         let close_par = PC.word "]" in
-        let dl_par = PC.caten open_par (PC.caten (PC.plus a_parser) (PC.caten dot_par (PC.caten a_parser (maybe close_par)))) in
-        PC.pack dl_par (fun (first, (lst, (dot, (e, last)))) -> match lst with
+        let dl_par = PC.caten open_par (PC.caten (PC.plus a_parser) (PC.caten dot_par (PC.caten a_parser (PC.maybe close_par)))) in
+        PC.pack dl_par (function (first, (lst, (dot, (e, last)))) -> match lst with
         | _ -> List.fold_right (fun a b -> Pair(a,b)) lst e)
         s
     and v_parser s =
         let prefix_par = PC.word "#" in
         let open_par = PC.word "(" in
         let close_par = PC.word ")" in
-        let v_par = PC.caten prefix_par (PC.caten open_par (PC.caten (PC.star a_parser) (maybe close_par))) in
-        PC.pack v_par (fun(a,(b,(lst,c))) -> match lst with
+        let v_par = PC.caten prefix_par (PC.caten open_par (PC.caten (PC.star a_parser) (PC.maybe close_par))) in
+        PC.pack v_par (function(a,(b,(lst,c))) -> match lst with
         | _ -> Vector(lst))
         s;;
 
