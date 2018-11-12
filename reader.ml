@@ -66,8 +66,6 @@ let normalize_scheme_symbol str =
 	s) then str
   else Printf.sprintf "|%s|" str;;
 
-let read_sexpr string = raise X_not_yet_implemented;;
-let read_sexprs string = raise X_not_yet_implemented;;
 
 
 let symbol_char_digits_parser s =
@@ -77,7 +75,7 @@ let symbol_char_digits_parser s =
   let lower_case_range_packed = PC.pack lower_case_range_parser (fun (temp)-> temp) in
   let upper_case_range_parser = PC.range 'A' 'Z' in
   let upper_case_range_packed = PC.pack upper_case_range_parser (fun (temp)-> temp) in
-  let digits_packed = PC.disj number_range_packed (PC.disj lower_case_range_packed upper_case_range_packed) in
+  let digits_packed = PC.disj number_range_packed (*TODO may here add lower*) (PC.disj lower_case_range_packed upper_case_range_packed) in
   digits_packed s;;
 
 
@@ -142,7 +140,7 @@ let named_char_parser s =
 
 
 let hex_char_parser s =
-  let x_parser = PC.char 'x' in
+  let x_parser = PC.char_ci 'x' in
   let hex_parser = PC.caten x_parser (PC.plus hex_digit_parser) in
   let hex_packed = PC.pack hex_parser (fun (temp)->  Char (char_of_int (int_of_string ( "0x" ^ (list_to_string (snd temp) ))))) in
   hex_packed s;;
@@ -237,12 +235,14 @@ let float_parser s = PC.pack
 (** TODO*)
 let not_siged_hex_flaot_parser s = 
     PC.pack (PC.caten not_signed_hex_integer_parser (PC.caten dot_parser hex_natural_parser))
-    (fun (temp)-> float_of_string( (string_of_int (fst temp)) ^ "." ^  string_of_int(int_of_string( "0x" ^ (list_to_string(snd(snd(temp))))))))
+    (fun (temp)-> (float_of_int (fst temp)) +. float_of_string( "0x0." ^ (list_to_string(snd(snd(temp))))))
     s;;
 
 let siged_hex_flaot_parser s = 
     PC.pack (PC.caten signed_hex_integer_parser (PC.caten dot_parser hex_natural_parser))
-    (fun (temp)-> float_of_string( (string_of_int (fst temp)) ^ "." ^  string_of_int(int_of_string( "0x" ^ (list_to_string(snd(snd(temp))))))))
+    (fun (temp)-> if ((fst temp ) < 0) 
+                  then ((float_of_int (fst temp)) -. float_of_string( "0x0." ^ (list_to_string(snd(snd(temp))))))
+                  else ((float_of_int (fst temp)) +. float_of_string( "0x0." ^ (list_to_string(snd(snd(temp)))))))
     s;;
 
 let hex_float_parser s = PC.pack 
@@ -252,7 +252,7 @@ let hex_float_parser s = PC.pack
 
 
 
-
+(*
 let scientific_float_parser_helper string =
   pack (caten (disj siged_flaot_parser not_siged_flaot_parser)
         (caten (word_ci "e") (disj signed_integer_parser not_signed_integer_parser))) 
@@ -278,6 +278,36 @@ let scientific_int_parser string =
   pack scientific_int_parser_helper
   (fun (temp) -> if (temp = float_of_int(int_of_float(temp)))
   then Number(Int(int_of_float(temp)))
+  else Number(Float(temp)))
+  string;;
+*)
+
+
+let scientific_float_parser_helper string =
+  pack (caten (disj siged_flaot_parser not_siged_flaot_parser)
+        (caten (word_ci "e") (disj signed_integer_parser not_signed_integer_parser))) 
+  (fun (temp) -> ((fst temp)*.(10.0**(float_of_int(snd(snd temp))))))
+  string;;
+
+
+let scientific_float_parser string =
+  pack scientific_float_parser_helper
+  (fun (temp) -> if (temp = float_of_int(int_of_float(temp)))
+  then Number(Float(temp))
+  else Number(Float(temp)))
+  string;;
+
+let scientific_int_parser_helper string =
+  pack (caten (disj signed_integer_parser not_signed_integer_parser)
+        (caten (word_ci "e") (disj signed_integer_parser not_signed_integer_parser))) 
+  (fun (temp) -> (float_of_int(fst temp))*.(10.0**(float_of_int(snd(snd temp))))) 
+  string;;
+
+
+let scientific_int_parser string =
+  pack scientific_int_parser_helper
+  (fun (temp) -> if (temp = float_of_int(int_of_float(temp)))
+  then Number(Float(temp))
   else Number(Float(temp)))
   string;;
 
@@ -456,6 +486,19 @@ let rec sexpr_parser string =
     and disj_stars_comments_white_spaces s =
          PC.pack (PC.star (PC.disj sexpr_comments_parser (PC.disj line_comments_parser white_spaces_parser))) (fun(temp) -> Nil)
          s;;
+
+
+let read_sexpr string = fst (sexpr_parser(string_to_list string));;
+
+
+
+let read_sexprs string = fst ((star sexpr_parser ) (string_to_list string));;
+
+
+
+
+
+
 
 (*Starting to work on 4.3*)
 (*and close_all_parser s =
