@@ -6,7 +6,7 @@
  *)
 
 #use "pc.ml";;
-open PC (*TODO maybe remove but if we remove we need to add PC. to some places so don't forget*)
+open PC 
 
 exception X_not_yet_implemented;;
 exception X_this_should_not_happen;;
@@ -39,26 +39,9 @@ let rec sexpr_eq s1 s2 =
   | _ -> false;;
   
   
-module Reader: sig (*TODO add sig for parsers and then remove*)
+module Reader: sig
   val read_sexpr : string -> sexpr
   val read_sexprs : string -> sexpr list
-  val bool_parser : char list -> sexpr * char list
-  val digit_parser : char list -> char * char list
-  val char_prefix_parser : char list -> sexpr * char list
-  val visible_simple_char_parser : char list -> sexpr * char list
-  val named_char_parser : char list -> sexpr * char list
-  val hex_digit_parser : char list -> char * char list
-  val hex_char_parser : char list -> sexpr * char list
-  val char_parser : char list -> sexpr * char list
-  val integer_parser : char list -> sexpr * char list
-  val float_parser : char list -> sexpr * char list
-  val hex_integer_parser : char list -> sexpr * char list
-  val symbol_char_parser : char list -> char * char list
-  val symbol_parser : char list -> sexpr * char list
-  val string_parser : char list -> sexpr * char list
-  val string_hex_char_parser : char list -> char * char list
-  val number_parser : char list -> sexpr * char list
-  val sexpr_parser: char list -> sexpr * char list
 end
 = struct
 let normalize_scheme_symbol str =
@@ -145,7 +128,7 @@ let named_char_parser s =
 
 
 let hex_char_parser s =
-  let x_parser = PC.char_ci 'x' in (*TODO check if it needs to be char_ci*)
+  let x_parser = PC.char_ci 'x' in
   let hex_parser = PC.caten x_parser (PC.plus hex_digit_parser) in
   let hex_packed = PC.pack hex_parser (fun (temp)->  Char (char_of_int (int_of_string ( "0x" ^ (list_to_string (snd temp) ))))) in
   hex_packed s;;
@@ -361,7 +344,7 @@ let string_meta_char_parser s =
 
 
 
-let string_hex_char_parser s = (*TODO CHECK IF NEED TO BE WORD_CI FOR \Xs*)
+let string_hex_char_parser s =
   let prefix_parser = PC.word_ci "\\x" in
   let closing_parser = PC.word ";" in
   let hex_char_parser = PC.plus hex_digit_parser in
