@@ -6,7 +6,7 @@
  *)
 
 #use "pc.ml";;
-open PC (*TODO maybe remove*)
+open PC (*TODO maybe remove but if we remove we need to add PC. to some places so don't forget*)
 
 exception X_not_yet_implemented;;
 exception X_this_should_not_happen;;
@@ -77,8 +77,8 @@ let symbol_char_digits_parser s =
   let lower_case_range_parser = PC.range 'a' 'z' in
   let lower_case_range_packed = PC.pack lower_case_range_parser (fun (temp)-> temp) in
   let upper_case_range_parser = PC.range 'A' 'Z' in
-  let upper_case_range_packed = PC.pack upper_case_range_parser (fun (temp)-> temp) in
-  let digits_packed = PC.disj number_range_packed (*TODO may here add lower*) (PC.disj lower_case_range_packed upper_case_range_packed) in
+  let upper_case_range_packed = PC.pack upper_case_range_parser (fun (temp)-> (lowercase_ascii temp)) in
+  let digits_packed = PC.disj number_range_packed (PC.disj lower_case_range_packed upper_case_range_packed) in
   digits_packed s;;
 
 
@@ -103,7 +103,7 @@ let bool_parser s =
 
 let char_prefix_parser s = 
   let prefix_parser = PC.word "#\\" in
-  let prefix_packed = PC.pack prefix_parser (fun (temp) -> Nil) in (*TODO CHECK Nil is good *)
+  let prefix_packed = PC.pack prefix_parser (fun (temp) -> Nil) in
   prefix_packed s;;
 
 let visible_simple_char_parser s = 
@@ -361,8 +361,9 @@ let string_meta_char_parser s =
 
 let string_hex_char_parser s = (*TODO CHECK IF NEED TO BE WORD_CI FOR \Xs*)
   let prefix_parser = PC.word_ci "\\x" in
+  let closing_parser = PC.word ";" in
   let hex_char_parser = PC.plus hex_digit_parser in
-  let hex_char_packed = PC.pack (PC.caten prefix_parser hex_char_parser) (fun (temp) -> char_of_int(int_of_string ("0x" ^ (list_to_string(snd temp))))) in
+  let hex_char_packed = PC.pack (PC.caten prefix_parser (PC.caten hex_char_parser closing_parser)) (fun (temp) -> char_of_int(int_of_string ("0x" ^ (list_to_string(fst(snd temp)))))) in
   hex_char_packed s;;
 
 let string_char_parser s =
@@ -399,7 +400,6 @@ let line_comments_parser s =
   let line_comments_packed = PC.pack line_comment_parser (fun (temp) -> Nil) in
   line_comments_packed s;;
 
-
 let rec sexpr_parser string =
       PC.pack (PC.caten disj_stars_comments_white_spaces (PC.caten (PC.disj_list [bool_parser;
                              char_parser;
@@ -421,18 +421,18 @@ let rec sexpr_parser string =
     and list_parser s =
           let left_par  = PC.word "(" in
           let right_par = PC.word ")" in
-          let sexpr_star= PC.star sexpr_parser   in 
+          let sexpr_star = PC.caten disj_stars_comments_white_spaces (PC.caten (PC.star sexpr_parser) disj_stars_comments_white_spaces) in
           PC.pack (PC.caten left_par (PC.caten sexpr_star right_par)) 
-          (function (left,(lst,right))-> match lst with
+          (function (left,((l, (lst, r)),right))-> match lst with
           | []-> Nil
           | _-> (List.fold_right (fun a b -> Pair (a,b)) lst Nil))
           s
     and special_list_parser s =
           let left_par  = PC.word "[" in
           let right_par = PC.word "]" in
-          let sexpr_star= PC.star sexpr_parser   in 
+          let sexpr_star = PC.caten disj_stars_comments_white_spaces (PC.caten (PC.star sexpr_parser) disj_stars_comments_white_spaces) in
           PC.pack (PC.caten left_par (PC.caten sexpr_star right_par)) 
-          (function (left,(lst,right))-> match lst with
+          (function (left,((l, (lst, r)),right))-> match lst with
           | []-> Nil
           | _-> (List.fold_right (fun a b -> Pair (a,b)) lst Nil))
           s
@@ -492,24 +492,20 @@ let rec sexpr_parser string =
          s;;
 
 
+
+
+
+
 let read_sexpr string =
-  let (e,s) = (sexpr_parser(string_to_list string)) in
-  if (s=[])
+    let (e, s) = (sexpr_parser (string_to_list string)) in
+    if (s = [])
     then e
     else raise X_no_match;;
 
- let read_sexprs string = 
-  let (lst, s) = ((star sexpr_parser)(string_to_list string)) in 
-  lst;;   
 
-
-
-(*Starting to work on 4.3*)
-(*and close_all_parser s =
-    let left_par = PC.disj ((PC.word "(") (PC.word "[")) in
-    let right_par = PC.disj ((PC.word ")") (PC.word "]")) in
-    let close_all_par = PC.word "..." in
-    let rec first_parser = PC.caten ()*)
+let read_sexprs string =
+    let (lst, s) = ((PC.star sexpr_parser) (string_to_list string)) in
+    lst;;
 
 end;; (* struct Reader *)
 
