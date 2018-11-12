@@ -6,7 +6,7 @@
  *)
 
 #use "pc.ml";;
-open PC (*TODO maybe remove*)
+open PC (*TODO maybe remove but if we remove we need to add PC. to some places so don't forget*)
 
 exception X_not_yet_implemented;;
 exception X_this_should_not_happen;;
@@ -77,8 +77,8 @@ let symbol_char_digits_parser s =
   let lower_case_range_parser = PC.range 'a' 'z' in
   let lower_case_range_packed = PC.pack lower_case_range_parser (fun (temp)-> temp) in
   let upper_case_range_parser = PC.range 'A' 'Z' in
-  let upper_case_range_packed = PC.pack upper_case_range_parser (fun (temp)-> temp) in
-  let digits_packed = PC.disj number_range_packed (*TODO may here add lower*) (PC.disj lower_case_range_packed upper_case_range_packed) in
+  let upper_case_range_packed = PC.pack upper_case_range_parser (fun (temp)-> (lowercase_ascii temp)) in
+  let digits_packed = PC.disj number_range_packed (PC.disj lower_case_range_packed upper_case_range_packed) in
   digits_packed s;;
 
 
@@ -103,7 +103,7 @@ let bool_parser s =
 
 let char_prefix_parser s = 
   let prefix_parser = PC.word "#\\" in
-  let prefix_packed = PC.pack prefix_parser (fun (temp) -> Nil) in (*TODO CHECK Nil is good *)
+  let prefix_packed = PC.pack prefix_parser (fun (temp) -> Nil) in
   prefix_packed s;;
 
 let visible_simple_char_parser s = 
@@ -510,13 +510,13 @@ let read_sexprs string = fst ((star sexpr_parser ) (string_to_list string));;
     let close_all_par = PC.word "..." in
     let rec first_parser = PC.caten ()*)
 
-let read_sexpr string =
+(*let read_sexpr string =
     let (e, s) = (sexpr_parser (string_to_list string)) in
     e;;
 
 let read_sexprs string =
     let (lst, s) = ((PC.star sexpr_parser) (string_to_list string)) in
-    lst;;
+    lst;;*)
 
 end;; (* struct Reader *)
 
