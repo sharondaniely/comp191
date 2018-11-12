@@ -242,37 +242,6 @@ let hex_float_parser s = PC.pack
 
 
 
-(*
-let scientific_float_parser_helper string =
-  pack (caten (disj siged_flaot_parser not_siged_flaot_parser)
-        (caten (word_ci "e") (disj signed_integer_parser not_signed_integer_parser))) 
-  (fun (temp) -> ((fst temp)*.(10.0**(float_of_int(snd(snd temp))))))
-  string;;
-
-
-let scientific_float_parser string =
-  pack scientific_float_parser_helper
-  (fun (temp) -> if (temp = float_of_int(int_of_float(temp)))
-  then Number(Int(int_of_float(temp)))
-  else Number(Float(temp)))
-  string;;
-
-let scientific_int_parser_helper string =
-  pack (caten (disj signed_integer_parser not_signed_integer_parser)
-        (caten (word_ci "e") (disj signed_integer_parser not_signed_integer_parser))) 
-  (fun (temp) -> (float_of_int(fst temp))*.(10.0**(float_of_int(snd(snd temp))))) 
-  string;;
-
-
-let scientific_int_parser string =
-  pack scientific_int_parser_helper
-  (fun (temp) -> if (temp = float_of_int(int_of_float(temp)))
-  then Number(Int(int_of_float(temp)))
-  else Number(Float(temp)))
-  string;;
-*)
-
-
 let scientific_float_parser_helper string =
   pack (caten (disj siged_flaot_parser not_siged_flaot_parser)
         (caten (word_ci "e") (disj signed_integer_parser not_signed_integer_parser))) 
