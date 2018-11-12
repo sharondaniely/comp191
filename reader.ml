@@ -425,7 +425,7 @@ let rec sexpr_parser string =
           | []-> Nil
           | _-> (List.fold_right (fun a b -> Pair (a,b)) lst Nil))
           s
-    and list_parser s =
+    and special_list_parser s =
           let left_par  = PC.word "[" in
           let right_par = PC.word "]" in
           let sexpr_star = PC.caten disj_stars_comments_white_spaces (PC.caten (PC.star sexpr_parser) disj_stars_comments_white_spaces) in
@@ -491,32 +491,20 @@ let rec sexpr_parser string =
          s;;
 
 
-let read_sexpr string = fst (sexpr_parser(string_to_list string));;
-
-
-
-let read_sexprs string = fst ((star sexpr_parser ) (string_to_list string));;
 
 
 
 
-
-
-
-(*Starting to work on 4.3*)
-(*and close_all_parser s =
-    let left_par = PC.disj ((PC.word "(") (PC.word "[")) in
-    let right_par = PC.disj ((PC.word ")") (PC.word "]")) in
-    let close_all_par = PC.word "..." in
-    let rec first_parser = PC.caten ()*)
-
-(*let read_sexpr string =
+let read_sexpr string =
     let (e, s) = (sexpr_parser (string_to_list string)) in
-    e;;
+    if (s = [])
+    then e
+    else raise X_no_match;;
+
 
 let read_sexprs string =
     let (lst, s) = ((PC.star sexpr_parser) (string_to_list string)) in
-    lst;;*)
+    lst;;
 
 end;; (* struct Reader *)
 
