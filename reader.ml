@@ -66,6 +66,9 @@ let normalize_scheme_symbol str =
 	s) then str
   else Printf.sprintf "|%s|" str;;
 
+(*let read_sexpr string = raise X_not_yet_implemented;;*)
+(*let read_sexprs string = raise X_not_yet_implemented;;*)
+
 
 
 let symbol_char_digits_parser s =
@@ -140,7 +143,7 @@ let named_char_parser s =
 
 
 let hex_char_parser s =
-  let x_parser = PC.char_ci 'x' in
+  let x_parser = PC.char_ci 'x' in (*TODO check if it needs to be char_ci*)
   let hex_parser = PC.caten x_parser (PC.plus hex_digit_parser) in
   let hex_packed = PC.pack hex_parser (fun (temp)->  Char (char_of_int (int_of_string ( "0x" ^ (list_to_string (snd temp) ))))) in
   hex_packed s;;
@@ -355,7 +358,7 @@ let string_meta_char_parser s =
 
 
 let string_hex_char_parser s = (*TODO CHECK IF NEED TO BE WORD_CI FOR \Xs*)
-  let prefix_parser = PC.word "\\x" in
+  let prefix_parser = PC.word_ci "\\x" in
   let hex_char_parser = PC.plus hex_digit_parser in
   let hex_char_packed = PC.pack (PC.caten prefix_parser hex_char_parser) (fun (temp) -> char_of_int(int_of_string ("0x" ^ (list_to_string(snd temp))))) in
   hex_char_packed s;;
@@ -506,6 +509,14 @@ let read_sexprs string = fst ((star sexpr_parser ) (string_to_list string));;
     let right_par = PC.disj ((PC.word ")") (PC.word "]")) in
     let close_all_par = PC.word "..." in
     let rec first_parser = PC.caten ()*)
+
+let read_sexpr string =
+    let (e, s) = (sexpr_parser (string_to_list string)) in
+    e;;
+
+let read_sexprs string =
+    let (lst, s) = ((PC.star sexpr_parser) (string_to_list string)) in
+    lst;;
 
 end;; (* struct Reader *)
 
