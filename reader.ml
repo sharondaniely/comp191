@@ -221,8 +221,10 @@ let not_siged_flaot_parser s =
     s;;
 
 let siged_flaot_parser s = 
-    PC.pack (PC.caten signed_integer_parser (PC.caten dot_parser natural_parser))
-    (fun (temp)-> float_of_string( (string_of_int (fst temp))^ "." ^ string_of_int(snd(snd(temp)))))  
+    PC.pack (caten sign_parser (caten natural_parser (caten dot_parser natural_parser)))
+    (fun (temp)-> if  ((fst temp) = '-')
+                  then (-1.0)*. float_of_string((string_of_int(fst(snd temp)))^ "." ^ (string_of_int(snd(snd(snd(temp))))))
+                  else  float_of_string((string_of_int(fst(snd temp)))^ "." ^ (string_of_int(snd(snd(snd(temp))))))) 
     s;;
 
 let float_parser s = PC.pack 
@@ -241,11 +243,11 @@ let not_siged_hex_flaot_parser s =
     (fun (temp)-> (float_of_int (fst temp)) +. float_of_string( "0x0." ^ (list_to_string(snd(snd(temp))))))
     s;;
 
-let siged_hex_flaot_parser s = 
-    PC.pack (PC.caten signed_hex_integer_parser (PC.caten dot_parser hex_natural_parser))
-    (fun (temp)-> if ((fst temp ) < 0) 
-                  then ((float_of_int (fst temp)) -. float_of_string( "0x0." ^ (list_to_string(snd(snd(temp))))))
-                  else ((float_of_int (fst temp)) +. float_of_string( "0x0." ^ (list_to_string(snd(snd(temp)))))))
+let siged_hex_flaot_parser s =
+    PC.pack (PC.caten hex_prefix (caten sign_parser (caten hex_natural_parser (PC.caten dot_parser hex_natural_parser))))
+    (fun (temp)-> if ((fst(snd temp)) = '-') 
+                  then (-1.0)*.((float_of_string ("0x" ^(list_to_string(fst(snd(snd temp)))))) +. float_of_string( "0x0." ^ (list_to_string(snd(snd(snd(snd temp)))))))
+                  else (float_of_string ("0x" ^(list_to_string(fst(snd(snd temp)))))) +. float_of_string( "0x0." ^ (list_to_string(snd(snd(snd(snd temp)))))))
     s;;
 
 let hex_float_parser s = PC.pack 
@@ -483,7 +485,6 @@ let rec sexpr_parser string =
          s
     and sexpr_comments_parser s =
         let prefix_par = PC.word "#;" in
-        let prefix_pack = PC.pack prefix_par (fun (temp) -> Nil) in
         PC.pack (PC.caten prefix_par sexpr_parser) (fun (temp) -> Nil)
         s
     and disj_stars_comments_white_spaces s =
@@ -491,15 +492,15 @@ let rec sexpr_parser string =
          s;;
 
 
-let read_sexpr string = fst (sexpr_parser(string_to_list string));;
+let read_sexpr string =
+  let (e,s) = (sexpr_parser(string_to_list string)) in
+  if (s=[])
+    then e
+    else raise X_no_match;;
 
-
-
-let read_sexprs string = fst ((star sexpr_parser ) (string_to_list string));;
-
-
-
-
+ let read_sexprs string = 
+  let (lst, s) = ((star sexpr_parser)(string_to_list string)) in 
+  lst;;   
 
 
 
@@ -509,14 +510,6 @@ let read_sexprs string = fst ((star sexpr_parser ) (string_to_list string));;
     let right_par = PC.disj ((PC.word ")") (PC.word "]")) in
     let close_all_par = PC.word "..." in
     let rec first_parser = PC.caten ()*)
-
-let read_sexpr string =
-    let (e, s) = (sexpr_parser (string_to_list string)) in
-    e;;
-
-let read_sexprs string =
-    let (lst, s) = ((PC.star sexpr_parser) (string_to_list string)) in
-    lst;;
 
 end;; (* struct Reader *)
 
