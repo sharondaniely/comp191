@@ -398,7 +398,6 @@ let line_comments_parser s =
   let line_comments_packed = PC.pack line_comment_parser (fun (temp) -> Nil) in
   line_comments_packed s;;
 
-
 let rec sexpr_parser string =
       PC.pack (PC.caten disj_stars_comments_white_spaces (PC.caten (PC.disj_list [bool_parser;
                              char_parser;
@@ -420,18 +419,18 @@ let rec sexpr_parser string =
     and list_parser s =
           let left_par  = PC.word "(" in
           let right_par = PC.word ")" in
-          let sexpr_star= PC.star sexpr_parser   in 
+          let sexpr_star = PC.caten disj_stars_comments_white_spaces (PC.caten (PC.star sexpr_parser) disj_stars_comments_white_spaces) in
           PC.pack (PC.caten left_par (PC.caten sexpr_star right_par)) 
-          (function (left,(lst,right))-> match lst with
+          (function (left,((l, (lst, r)),right))-> match lst with
           | []-> Nil
           | _-> (List.fold_right (fun a b -> Pair (a,b)) lst Nil))
           s
-    and special_list_parser s =
+    and list_parser s =
           let left_par  = PC.word "[" in
           let right_par = PC.word "]" in
-          let sexpr_star= PC.star sexpr_parser   in 
+          let sexpr_star = PC.caten disj_stars_comments_white_spaces (PC.caten (PC.star sexpr_parser) disj_stars_comments_white_spaces) in
           PC.pack (PC.caten left_par (PC.caten sexpr_star right_par)) 
-          (function (left,(lst,right))-> match lst with
+          (function (left,((l, (lst, r)),right))-> match lst with
           | []-> Nil
           | _-> (List.fold_right (fun a b -> Pair (a,b)) lst Nil))
           s
