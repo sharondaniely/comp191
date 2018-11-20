@@ -53,6 +53,7 @@ exception X_syntax_error;;
 module type TAG_PARSER = sig
   val tag_parse_expression : sexpr -> expr
   val tag_parse_expressions : sexpr list -> expr list
+  val expr_parser : sexpr -> expr
 end;; (* signature TAG_PARSER *)
 
 module Tag_Parser : TAG_PARSER = struct
@@ -86,14 +87,20 @@ let rec expr_parser s =
                 else Var(x)
   | Pair(Symbol("define") , Pair(name , Pair(expr , Nil))) -> Def(expr_parser name , expr_parser expr)
   | Pair(Symbol("set!") , Pair(name , Pair(expr , Nil))) -> Set(expr_parser name, expr_parser expr)
-  | Pair(Symbol("or"), x) -> or_expr_parser x 
+  | Pair(Symbol("or"), x) -> (or_expr_parser x)
+  | Pair(Symbol("begin"), x) -> (begin_expr_parser x) 
   | Pair(a , b) -> Applic((expr_parser a) , nested_pair_sexpr_to_list(b))
   | _ -> raise X_syntax_error
  and or_expr_parser x =
   match x with
   | Nil -> Const(Sexpr(Bool(false)))
-  | Pair(y , Nil) -> expr_parser y
+  | Pair(y , Nil) -> (expr_parser y)
   | _ -> Or((nested_pair_sexpr_to_list x))
+ and begin_expr_parser x =
+  match x with
+  | Nil -> Const(Void)
+  | Pair(y , Nil) -> (expr_parser y)
+  | _ -> Seq((nested_pair_sexpr_to_list x))
  and nested_pair_sexpr_to_list x =
   match x with
   | Nil -> []
