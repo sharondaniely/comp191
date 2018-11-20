@@ -53,7 +53,7 @@ exception X_syntax_error;;
 module type TAG_PARSER = sig
   val tag_parse_expression : sexpr -> expr
   val tag_parse_expressions : sexpr list -> expr list
-  val expr_parser : sexpr -> expr
+  val expr_parser : sexpr -> expr (*TODO DON'T FORGET TO REMOVE*)
 end;; (* signature TAG_PARSER *)
 
 module Tag_Parser : TAG_PARSER = struct
@@ -108,6 +108,11 @@ let rec expr_parser s =
   | Nil -> Const(Void)
   | Pair(y , Nil) -> (expr_parser y)
   | _ -> Seq((nested_pair_sexpr_to_list x))
+ and not_dotted lst =
+  match lst with
+  | Nil -> true
+  | Pair(a,b) -> (not_dotted b)
+  | _ -> false
  and nested_pair_sexpr_to_list x =
   match x with
   | Nil -> []
