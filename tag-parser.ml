@@ -69,5 +69,36 @@ let tag_parse_expression sexpr = raise X_not_yet_implemented;;
 
 let tag_parse_expressions sexpr = raise X_not_yet_implemented;;
 
+
+
+let rec expr_parser s =
+  match s with
+  | Bool(x) -> Const(Sexpr(Bool(x)))
+  | Char(x) -> Const(Sexpr(Char(x)))
+  | Number(x) -> Const(Sexpr(Number(x)))
+  | String(x) -> Const(Sexpr(String(x)))
+  | Pair(Symbol("quote") , Pair(x , Nil)) -> Const(Sexpr(x))
+  | Pair(Symbol("unquote") , Pair(x , Nil)) -> Const(Sexpr(x)) (*TODO CHECK WHAT TODO HERE*)
+  | Pair(Symbol("if"), Pair(test, Pair(dit, Nil))) -> If(expr_parser test, expr_parser dit, Const(Void))
+  | Pair(Symbol("if"), Pair(test , Pair(dit , Pair(dif , Nil)))) -> If(expr_parser test, expr_parser dit, expr_parser dif)
+  | Symbol(x) -> if (List.mem x reserved_word_list)
+                then raise X_syntax_error
+                else Var(x)
+  | Pair(Symbol("define") , Pair(name , Pair(expr , Nil))) -> Def(expr_parser name , expr_parser expr)
+  | Pair(Symbol("set!") , Pair(name , Pair(expr , Nil))) -> Set(expr_parser name, expr_parser expr)
+  | Pair(Symbol("or"), x) -> or_expr_parser x 
+  | Pair(a , b) -> Applic((expr_parser a) , nested_pair_sexpr_to_list(b))
+  | _ -> raise X_syntax_error
+ and or_expr_parser x =
+  match x with
+  | Nil -> Const(Sexpr(Bool(false)))
+  | Pair(y , Nil) -> expr_parser y
+  | _ -> Or((nested_pair_sexpr_to_list x))
+ and nested_pair_sexpr_to_list x =
+  match x with
+  | Nil -> []
+  | Pair(a,b) -> List.append [(expr_parser a)] (nested_pair_sexpr_to_list b)
+  | _ -> [(expr_parser x)];;
+
   
 end;; (* struct Tag_Parser *)
