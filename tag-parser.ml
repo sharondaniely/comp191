@@ -88,7 +88,12 @@ let rec expr_parser s =
   | Pair(Symbol("define") , Pair(name , Pair(expr , Nil))) -> Def(expr_parser name , expr_parser expr)
   | Pair(Symbol("set!") , Pair(name , Pair(expr , Nil))) -> Set(expr_parser name, expr_parser expr)
   | Pair(Symbol("or"), x) -> (or_expr_parser x)
-  | Pair(Symbol("begin"), x) -> (begin_expr_parser x) 
+  | Pair(Symbol("begin"), x) -> (begin_expr_parser x)
+  | Pair(Symbol("cond"), x) -> (cond_expr_parser x) (*TODO WRITE THIS FUNCTION*)
+  | Pair(Symbol("let"), x) -> (expr_let_parser x) (*TODO WRITE THIS FUNCTION*)
+  | Pair(Symbol("let*"), x) -> (expr_let_star_parser x) (*TODO WRITE THIS FUNCTION*)
+  | Pair(Symbol("letrec"), x) -> (expr_letrec_parser x) (*TODO WRITE THIS FUNCTION*)
+  | Pair(Symbol("lambda"), x) -> (lambda_expr_parser x) (*TODO WRITE THIS FUNCTION*) 
   | Pair(a , b) -> Applic((expr_parser a) , nested_pair_sexpr_to_list(b))
   | _ -> raise X_syntax_error
  and or_expr_parser x =
