@@ -71,6 +71,7 @@ let tag_parse_expression sexpr = raise X_not_yet_implemented;;
 let tag_parse_expressions sexpr = raise X_not_yet_implemented;;
 
 (*TODO DON'T FORGET TO CHECK THERE ARE UNIQE NAMES FOR ARGS - LAMBDA*)
+(*TODO - TAKE CARE OF UNQUOTE ONLY INSIDE QUASIQUOTE*)
 
 let rec expr_parser s =
   match s with
@@ -79,7 +80,6 @@ let rec expr_parser s =
   | Number(x) -> Const(Sexpr(Number(x)))
   | String(x) -> Const(Sexpr(String(x)))
   | Pair(Symbol("quote") , Pair(x , Nil)) -> Const(Sexpr(x))
-  | Pair(Symbol("unquote") , Pair(x , Nil)) -> Const(Sexpr(x)) (*TODO CHECK WHAT TODO HERE*)
   | Pair(Symbol("if"), Pair(test, Pair(dit, Nil))) -> If(expr_parser test, expr_parser dit, Const(Void))
   | Pair(Symbol("if"), Pair(test , Pair(dit , Pair(dif , Nil)))) -> If(expr_parser test, expr_parser dit, expr_parser dif)
   | Symbol(x) -> if (List.mem x reserved_word_list)
