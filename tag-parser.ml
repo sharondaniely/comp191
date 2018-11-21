@@ -98,9 +98,9 @@ let rec expr_parser s =
   (*| Pair(Symbol("cond"), x) -> (cond_expr_parser x) (*TODO WRITE THIS FUNCTION*)
   | Pair(Symbol("let"), x) -> (expr_let_parser x) (*TODO WRITE THIS FUNCTION*)
   | Pair(Symbol("let*"), x) -> (expr_let_star_parser x) (*TODO WRITE THIS FUNCTION*)
-  | Pair(Symbol("letrec"), x) -> (expr_letrec_parser x) (*TODO WRITE THIS FUNCTION*)
+  | Pair(Symbol("letrec"), x) -> (expr_letrec_parser x) (*TODO WRITE THIS FUNCTION*)*)
   | Pair(Symbol("and"), x) -> (and_expr_parser x) (*TODO WRITE THIS FUNCTION*)
-  | Pair(Symbol("quasiquote"), Pair(x , Nil)) -> (quasiquote_expr_parser x) (*TODO WRITE THIS FUNCTION*)*)
+  (*| Pair(Symbol("quasiquote"), Pair(x , Nil)) -> (quasiquote_expr_parser x) (*TODO WRITE THIS FUNCTION*)*)
   | Pair(a , b) -> Applic((expr_parser a) , (nested_pair_sexpr_to_list b))
   | _ -> raise X_syntax_error
  and or_expr_parser x =
@@ -108,6 +108,12 @@ let rec expr_parser s =
   | Nil -> Const(Sexpr(Bool(false)))
   | Pair(y , Nil) -> (expr_parser y)
   | _ -> Or((nested_pair_sexpr_to_list x))
+ and and_expr_parser x =
+  match x with
+  | Nil -> Const(Sexpr(Bool(true)))
+  | Pair(y , Nil) -> (expr_parser y)
+  | Pair(y , z) -> If((expr_parser y), (and_expr_parser z), Const(Sexpr(Bool(false))))
+  | _ -> raise X_syntax_error 
  and begin_expr_parser x =
   match x with
   | Nil -> Const(Void)
