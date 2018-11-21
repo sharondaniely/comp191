@@ -89,11 +89,13 @@ let rec expr_parser s =
   | Pair(Symbol("set!") , Pair(name , Pair(expr , Nil))) -> Set(expr_parser name, expr_parser expr)
   | Pair(Symbol("or"), x) -> (or_expr_parser x)
   | Pair(Symbol("begin"), x) -> (begin_expr_parser x)
+  | Pair(Symbol("lambda"),Pair(x, Pair(y, Nil))) -> if ((not_dotted x) && (not_dotted y))
+                                                    then (lambda_simple_expr_parser s)
+                                                    else raise X_not_yet_implemented (*TODO IMPLEMENT THIS*)
   (*| Pair(Symbol("cond"), x) -> (cond_expr_parser x) (*TODO WRITE THIS FUNCTION*)
   | Pair(Symbol("let"), x) -> (expr_let_parser x) (*TODO WRITE THIS FUNCTION*)
   | Pair(Symbol("let*"), x) -> (expr_let_star_parser x) (*TODO WRITE THIS FUNCTION*)
   | Pair(Symbol("letrec"), x) -> (expr_letrec_parser x) (*TODO WRITE THIS FUNCTION*)
-  | Pair(Symbol("lambda"), x) -> (lambda_expr_parser x) (*TODO WRITE THIS FUNCTION*) 
   | Pair(Symbol("and"), x) -> (and_expr_parser x) (*TODO WRITE THIS FUNCTION*)
   | Pair(Symbol("quasiquote"), Pair(x , Nil)) -> (quasiquote_expr_parser x) (*TODO WRITE THIS FUNCTION*)*)
   | Pair(a , b) -> Applic((expr_parser a) , nested_pair_sexpr_to_list(b))
@@ -108,6 +110,15 @@ let rec expr_parser s =
   | Nil -> Const(Void)
   | Pair(y , Nil) -> (expr_parser y)
   | _ -> Seq((nested_pair_sexpr_to_list x))
+ and lambda_simple_expr_parser s =
+  match s with
+  | Pair(Symbol("lambda"),Pair(x, Pair(y, Nil))) -> LambdaSimple((sexpr_list_to_string_list x) , Seq((nested_pair_sexpr_to_list y)))
+  | _ -> raise X_syntax_error
+ and sexpr_list_to_string_list x =
+  match x with
+  | Nil -> []
+  | Pair(Symbol(a),b) -> List.append [a] (sexpr_list_to_string_list b)
+  | _ -> raise X_syntax_error
  and not_dotted lst =
   match lst with
   | Nil -> true
