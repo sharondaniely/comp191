@@ -93,8 +93,8 @@ let rec expr_parser s =
   | Pair(Symbol("lambda"),Pair(args, Pair(body, Nil))) -> if ((not_dotted args) && (not_dotted body))
                                                          then (lambda_simple_expr_parser s)
                                                          else if ((not(not_dotted args)) && (not_dotted body))
-                                                         then (lambda_opt_expr_parser s)
-                                                         else raise X_syntax_error
+                                                              then (lambda_opt_expr_parser s)
+                                                              else raise X_syntax_error
   (*| Pair(Symbol("cond"), x) -> (cond_expr_parser x) (*TODO WRITE THIS FUNCTION*)
   | Pair(Symbol("let"), x) -> (expr_let_parser x) (*TODO WRITE THIS FUNCTION*)
   | Pair(Symbol("let*"), x) -> (expr_let_star_parser x) (*TODO WRITE THIS FUNCTION*)
