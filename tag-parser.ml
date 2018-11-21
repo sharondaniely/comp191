@@ -70,7 +70,7 @@ let tag_parse_expression sexpr = raise X_not_yet_implemented;;
 
 let tag_parse_expressions sexpr = raise X_not_yet_implemented;;
 
-
+(*TODO DON'T FORGET TO CHECK THERE ARE UNIQE NAMES FOR ARGS - LAMBDA*)
 
 let rec expr_parser s =
   match s with
@@ -89,9 +89,11 @@ let rec expr_parser s =
   | Pair(Symbol("set!") , Pair(name , Pair(expr , Nil))) -> Set(expr_parser name, expr_parser expr)
   | Pair(Symbol("or"), x) -> (or_expr_parser x)
   | Pair(Symbol("begin"), x) -> (begin_expr_parser x)
-  | Pair(Symbol("lambda"),Pair(x, Pair(y, Nil))) -> if ((not_dotted x) && (not_dotted y))
+  | Pair(Symbol("lambda"),Pair(args, Pair(body, Nil))) -> if ((not_dotted args) && (not_dotted body))
                                                     then (lambda_simple_expr_parser s)
-                                                    else raise X_not_yet_implemented (*TODO IMPLEMENT THIS*)
+                                                    else if ((not(not_dotted args)) && (not_dotted body))
+                                                         then (lambda_opt_expr_parser s)
+                                                         else (*(lambda_variadic_expr_parser s)*) raise X_not_yet_implemented
   (*| Pair(Symbol("cond"), x) -> (cond_expr_parser x) (*TODO WRITE THIS FUNCTION*)
   | Pair(Symbol("let"), x) -> (expr_let_parser x) (*TODO WRITE THIS FUNCTION*)
   | Pair(Symbol("let*"), x) -> (expr_let_star_parser x) (*TODO WRITE THIS FUNCTION*)
@@ -112,18 +114,36 @@ let rec expr_parser s =
   | _ -> Seq((nested_pair_sexpr_to_list x))
  and lambda_simple_expr_parser s =
   match s with
-  | Pair(Symbol("lambda"),Pair(x, Pair(y, Nil))) -> LambdaSimple((sexpr_list_to_string_list x) , Seq((nested_pair_sexpr_to_list y)))
+  | Pair(Symbol("lambda"),Pair(args, Pair(body, Nil))) -> LambdaSimple((sexpr_list_to_string_list args) , Seq((nested_pair_sexpr_to_list body)))
+  | _ -> raise X_syntax_error
+ and lambda_opt_expr_parser s =
+  match s with
+  | Pair(Symbol("lambda"),Pair(args, Pair(body, Nil))) -> 
+      LambdaOpt((without_last_arg args),(symbol_to_string(last_arg args)), Seq((nested_pair_sexpr_to_list body)))
   | _ -> raise X_syntax_error
  and sexpr_list_to_string_list x =
   match x with
   | Nil -> []
   | Pair(Symbol(a),b) -> List.append [a] (sexpr_list_to_string_list b)
   | _ -> raise X_syntax_error
+ and symbol_to_string x =
+  match x with
+  | Symbol(a) -> a
+  | _ -> raise X_syntax_error
  and not_dotted lst =
   match lst with
   | Nil -> true
   | Pair(a,b) -> (not_dotted b)
   | _ -> false
+ and last_arg lst =
+  match lst with
+  | Pair(a, b) -> (last_arg b)
+  | _ -> lst
+ and without_last_arg lst =
+  match lst with
+  | Pair(Symbol(x), Pair(a,b)) -> List.append [x] (without_last_arg (Pair(a,b)))
+  | Pair(Symbol(a),b) -> [a]
+  | _ -> raise X_syntax_error
  and nested_pair_sexpr_to_list x =
   match x with
   | Nil -> []
