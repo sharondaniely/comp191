@@ -123,22 +123,22 @@ let rec expr_parser s =
  and lambda_variadic_expr_parser s =
   match s with
   | Pair(Symbol("lambda"), Pair(Symbol(arg), Pair(body,Nil))) -> 
-       LambdaOpt([],arg, Seq((nested_pair_sexpr_to_list body)))
+       LambdaOpt([],arg, (begin_expr_parser body))
   | _ -> raise X_syntax_error
  and lambda_simple_expr_parser s =
   match s with
   | Pair(Symbol("lambda"),Pair(args, Pair(body, Nil))) -> 
-      LambdaSimple((sexpr_list_to_string_list args) , Seq((nested_pair_sexpr_to_list body)))
+      LambdaSimple((sexpr_list_to_string_list args) , (begin_expr_parser body))
   | _ -> raise X_syntax_error
  and lambda_opt_expr_parser s =
   match s with
   | Pair(Symbol("lambda"),Pair(args, Pair(body, Nil))) -> 
-      LambdaOpt((without_last_arg args),(symbol_to_string(last_arg args)), Seq((nested_pair_sexpr_to_list body)))
+      LambdaOpt((without_last_arg args),(symbol_to_string(last_arg args)), (begin_expr_parser body))
   | _ -> raise X_syntax_error
  and expr_let_parser s =
   match s with
   | Pair(Symbol("let"),Pair(args_list,body)) -> 
-     Applic(LambdaSimple((extract_vars_from_args args_list), Seq((nested_pair_sexpr_to_list body))),(extract_values_from_args args_list))
+     Applic(LambdaSimple((extract_vars_from_args args_list), (begin_expr_parser body)),(extract_values_from_args args_list))
   | _ -> raise X_syntax_error
  and expr_let_star_parser s =
   match s with
@@ -186,5 +186,5 @@ let rec expr_parser s =
   | Pair(a,b) -> List.append [(expr_parser a)] (nested_pair_sexpr_to_list b)
   | _ -> [(expr_parser x)];;
 
-  (*Last comment Adi*)
+
 end;; (* struct Tag_Parser *)
