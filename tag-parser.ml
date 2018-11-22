@@ -97,8 +97,8 @@ let rec expr_parser s =
                                                               else raise X_syntax_error
   (*| Pair(Symbol("cond"), x) -> (cond_expr_parser x) (*TODO WRITE THIS FUNCTION*)*)
   | Pair(Symbol("let"), x) -> (expr_let_parser s)
-  (*| Pair(Symbol("let*"), x) -> (expr_let_star_parser x) (*TODO WRITE THIS FUNCTION*)
-  | Pair(Symbol("letrec"), x) -> (expr_letrec_parser x) (*TODO WRITE THIS FUNCTION*)*)
+  | Pair(Symbol("let*"), x) -> (expr_let_star_parser s) (*TODO WRITE THIS FUNCTION*)
+  (*| Pair(Symbol("letrec"), x) -> (expr_letrec_parser x) (*TODO WRITE THIS FUNCTION*)*)
   | Pair(Symbol("and"), x) -> (and_expr_parser x)
   (*| Pair(Symbol("quasiquote"), Pair(x , Nil)) -> (quasiquote_expr_parser x) (*TODO WRITE THIS FUNCTION*)
   MIT Define TODO *)
@@ -137,8 +137,17 @@ let rec expr_parser s =
   | _ -> raise X_syntax_error
  and expr_let_parser s =
   match s with
-  | Pair(Symbol("let"),Pair(args_list,Pair(body,Nil))) -> 
+  | Pair(Symbol("let"),Pair(args_list,body)) -> 
      Applic(LambdaSimple((extract_vars_from_args args_list), Seq((nested_pair_sexpr_to_list body))),(extract_values_from_args args_list))
+  | _ -> raise X_syntax_error
+ and expr_let_star_parser s =
+  match s with
+  | Pair(Symbol("let*"), Pair(Nil, body)) -> 
+     (expr_parser (Pair(Symbol("let"), Pair(Nil, body))))
+  | Pair(Symbol("let*"), Pair(Pair(arg,Nil), body)) -> 
+     (expr_parser (Pair(Symbol("let"), Pair(Pair(arg,Nil), body))))
+  | Pair(Symbol("let*"), Pair(Pair(head,tail), body)) -> 
+     (expr_parser (Pair(Symbol("let"),Pair(Pair(head,Nil), Pair(Pair(Symbol("let*"),Pair(tail, body)),Nil)))))
   | _ -> raise X_syntax_error
  and extract_vars_from_args args_list =
   match args_list with
