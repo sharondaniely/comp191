@@ -95,7 +95,7 @@ let rec expr_parser s =
                                                          else if ((not(not_dotted args)) && (not_dotted body))
                                                               then (lambda_opt_expr_parser s)
                                                               else raise X_syntax_error
-  | Pair(Symbol("cond"), x) -> (cond_expr_parser s) (*TODO WRITE THIS FUNCTION - do not forget seq in the ribs*)
+  | Pair(Symbol("cond"), x) -> (cond_expr_parser s)
   | Pair(Symbol("let"), x) -> (expr_let_parser s)
   | Pair(Symbol("let*"), x) -> (expr_let_star_parser s)
   | Pair(Symbol("letrec"), x) -> (expr_letrec_parser s)
