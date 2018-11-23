@@ -95,7 +95,7 @@ let rec expr_parser s =
                                                          else if ((not(not_dotted args)) && (not_dotted body))
                                                               then (lambda_opt_expr_parser s)
                                                               else raise X_syntax_error
-  (*| Pair(Symbol("cond"), x) -> (cond_expr_parser x) (*TODO WRITE THIS FUNCTION - do not forget seq in the ribs*)*)
+  | Pair(Symbol("cond"), x) -> (cond_expr_parser s) (*TODO WRITE THIS FUNCTION - do not forget seq in the ribs*)
   | Pair(Symbol("let"), x) -> (expr_let_parser s)
   | Pair(Symbol("let*"), x) -> (expr_let_star_parser s)
   | Pair(Symbol("letrec"), x) -> (expr_letrec_parser s)
@@ -161,6 +161,23 @@ let rec expr_parser s =
      (expr_parser (Pair(Symbol("let"), Pair(Pair(arg,Nil), body))))
   | Pair(Symbol("let*"), Pair(Pair(head,tail), body)) -> 
      (expr_parser (Pair(Symbol("let"),Pair(Pair(head,Nil), Pair(Pair(Symbol("let*"),Pair(tail, body)),Nil)))))
+  | _ -> raise X_syntax_error
+ and cond_expr_parser s =
+  match s with
+  (*| Pair(Symbol("cond"), Pair(Pair(Symbol("else"),else_rib), Nil)) -> raise X_not_yet_implemented*) (*DON'T THINK I NEED THIS*)
+  | Pair(Symbol("cond"), Pair(Pair(Symbol("else"),else_rib), rest_ribs)) -> 
+     (expr_parser (Pair(Symbol("begin"), else_rib)))
+  | Pair(Symbol("cond"), Pair(Pair(test,Pair(Symbol("=>"),Pair(dit,Nil))),Nil)) -> 
+  (expr_parser (Pair(Symbol("let"),Pair(Pair(Pair(Symbol("value"), Pair(test,Nil)), Pair(Pair(Symbol("f"), Pair(Pair(Symbol("lambda"),Pair(Nil,Pair(dit,Nil))),Nil)),Nil))
+    ,Pair(Pair(Symbol("if"), Pair(Symbol("value"), Pair(Pair(Pair(Symbol("f"),Nil),Pair(Symbol("value"),Nil)),Nil)))
+    ,Nil)))))
+  | Pair(Symbol("cond"), Pair(Pair(test,Pair(Symbol("=>"),Pair(dit,Nil))),rest_ribs)) ->
+    (expr_parser (Pair(Symbol("let"),Pair(Pair(Pair(Symbol("value"), Pair(test,Nil)), Pair(Pair(Symbol("f"), Pair(Pair(Symbol("lambda"),Pair(Nil,Pair(dit,Nil))),Nil)),Nil))
+    ,Pair(Pair(Symbol("if"), Pair(Symbol("value"), Pair(Pair(Pair(Symbol("f"),Nil),Pair(Symbol("value"),Nil)),Pair(Pair(Symbol("cond"), rest_ribs) , Nil)))),Nil)))))
+  | Pair(Symbol("cond"), Pair(Pair(test,dit), Nil)) ->
+     (expr_parser (Pair(Symbol("if"), Pair(test, Pair(Pair(Symbol("begin"),dit), Nil)))))
+  | Pair(Symbol("cond"), Pair(Pair(test,dit), rest_ribs)) ->
+     (expr_parser (Pair(Symbol("if"), Pair(test , Pair(Pair(Symbol("begin"),dit) , Pair(Pair(Symbol("cond"), rest_ribs) , Nil))))))
   | _ -> raise X_syntax_error
  and extract_vars_from_args args_list =
   match args_list with
