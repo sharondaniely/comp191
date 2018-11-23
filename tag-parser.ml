@@ -147,7 +147,7 @@ let rec expr_parser s =
   | _ -> raise X_syntax_error 
  and new_args_list args_list =
   match args_list with
-   | Pair(Pair(Symbol(x),a),b) -> Pair(Pair(Symbol(x),Pair(Symbol("whatever"),Nil)),(new_args_list b))
+   | Pair(Pair(Symbol(x),a),b) -> Pair(Pair(Symbol(x),Pair(Pair(Symbol("quote") , Pair(Symbol("whatever") , Nil)),Nil)),(new_args_list b))
    | _ -> Nil
  and new_body args_list body =
   match args_list with
