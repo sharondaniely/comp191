@@ -89,13 +89,19 @@ let rec expr_parser s =
   | Pair(Symbol("set!") , Pair(name , Pair(expr , Nil))) -> Set(expr_parser name, expr_parser expr)
   | Pair(Symbol("or"), x) -> (or_expr_parser x)
   | Pair(Symbol("begin"), x) -> (begin_expr_parser x)
-  | Pair(Symbol("lambda"), Pair(Symbol(arg), Pair(body,Nil))) -> (lambda_variadic_expr_parser s)
-  | Pair(Symbol("lambda"),Pair(args, Pair(body, Nil))) -> if ((not_dotted args) && (not_dotted body))
+  (*| Pair(Symbol("lambda"), Pair(Symbol(arg), Pair(body,Nil))) -> (lambda_variadic_expr_parser s)*) (*TODO DELETE WHEN WE ARE SURE OUR LAMBDAS ARE CORRECT*)
+  | Pair(Symbol("lambda"), Pair(Symbol(arg), body)) -> (lambda_variadic_expr_parser s)
+  (*| Pair(Symbol("lambda"),Pair(args, Pair(body, Nil))) -> if ((not_dotted args) && (not_dotted body))
+                                                         then (lambda_simple_expr_parser s)
+                                                         else if ((not(not_dotted args)) && (not_dotted body))
+                                                              then (lambda_opt_expr_parser s)
+                                                              else raise X_syntax_error*) (*TODO DELETE WHEN WE ARE SURE OUR LAMBDAS ARE CORRECT*)
+  | Pair(Symbol("lambda"),Pair(args, body)) -> if ((not_dotted args) && (not_dotted body))
                                                          then (lambda_simple_expr_parser s)
                                                          else if ((not(not_dotted args)) && (not_dotted body))
                                                               then (lambda_opt_expr_parser s)
                                                               else raise X_syntax_error
-  (*| Pair(Symbol("cond"), x) -> (cond_expr_parser x) (*TODO WRITE THIS FUNCTION*)*)
+  (*| Pair(Symbol("cond"), x) -> (cond_expr_parser x) (*TODO WRITE THIS FUNCTION - do not forget seq in the ribs*)*)
   | Pair(Symbol("let"), x) -> (expr_let_parser s)
   | Pair(Symbol("let*"), x) -> (expr_let_star_parser s)
   | Pair(Symbol("letrec"), x) -> (expr_letrec_parser s)
@@ -122,17 +128,17 @@ let rec expr_parser s =
   | _ -> Seq((nested_pair_sexpr_to_list x))
  and lambda_variadic_expr_parser s =
   match s with
-  | Pair(Symbol("lambda"), Pair(Symbol(arg), Pair(body,Nil))) -> 
+  | Pair(Symbol("lambda"), Pair(Symbol(arg), body)) -> 
        LambdaOpt([],arg, (begin_expr_parser body))
   | _ -> raise X_syntax_error
  and lambda_simple_expr_parser s =
   match s with
-  | Pair(Symbol("lambda"),Pair(args, Pair(body, Nil))) -> 
+  | Pair(Symbol("lambda"),Pair(args, body)) -> 
       LambdaSimple((sexpr_list_to_string_list args) , (begin_expr_parser body))
   | _ -> raise X_syntax_error
  and lambda_opt_expr_parser s =
   match s with
-  | Pair(Symbol("lambda"),Pair(args, Pair(body, Nil))) -> 
+  | Pair(Symbol("lambda"),Pair(args, body)) -> 
       LambdaOpt((without_last_arg args),(symbol_to_string(last_arg args)), (begin_expr_parser body))
   | _ -> raise X_syntax_error
  and expr_let_parser s =
