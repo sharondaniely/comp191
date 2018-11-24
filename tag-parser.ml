@@ -66,7 +66,7 @@ let reserved_word_list =
 
 (* work on the tag parser starts here *)
 
-let tag_parse_expression sexpr = raise X_not_yet_implemented;;
+
 
 let tag_parse_expressions sexpr = raise X_not_yet_implemented;;
 
@@ -85,6 +85,7 @@ let rec expr_parser s =
   | Symbol(x) -> if (List.mem x reserved_word_list)
                 then raise X_syntax_error
                 else Var(x)
+  | Pair(Symbol("define") , Pair (Pair(var, args)  ,body))-> (expr_parser(Pair(Symbol("define") , Pair(var , Pair(Pair(Symbol("lambda"),Pair(args, body)) , Nil))) ))        
   | Pair(Symbol("define") , Pair(name , Pair(expr , Nil))) -> Def(expr_parser name , expr_parser expr)
   | Pair(Symbol("set!") , Pair(name , Pair(expr , Nil))) -> Set(expr_parser name, expr_parser expr)
   | Pair(Symbol("or"), x) -> (or_expr_parser x)
@@ -216,5 +217,8 @@ let rec expr_parser s =
   | Pair(a,b) -> List.append [(expr_parser a)] (nested_pair_sexpr_to_list b)
   | _ -> [(expr_parser x)];;
 
+
+let tag_parse_expression sexpr = 
+  (expr_parser sexpr)
 
 end;; (* struct Tag_Parser *)
