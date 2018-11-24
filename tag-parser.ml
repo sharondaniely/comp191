@@ -152,7 +152,7 @@ let rec expr_parser s =
  and new_body args_list body =
   match args_list with
   | Pair(Pair(Symbol(x),a),b) -> Pair(Pair(Symbol("set!"), Pair(Symbol(x),a)),(new_body b body))
-  | _ -> Pair(Pair(Symbol("let"),Pair(Nil,body)),Nil)
+  | _ -> body
  and expr_let_star_parser s =
   match s with
   | Pair(Symbol("let*"), Pair(Nil, body)) -> 
