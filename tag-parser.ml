@@ -102,7 +102,6 @@ let rec expr_parser s =
   | Pair(Symbol("letrec"), x) -> (expr_letrec_parser s)
   | Pair(Symbol("and"), x) -> (and_expr_parser x)
   (*| Pair(Symbol("quasiquote"), Pair(x , Nil)) -> (quasiquote_expr_parser x) (*TODO WRITE THIS FUNCTION*)*)
-  (*MIT Define TODO *)
   | Pair(a , b) -> Applic((expr_parser a) , (nested_pair_sexpr_to_list b))
   | _ -> raise X_syntax_error
  and or_expr_parser x =
