@@ -164,16 +164,16 @@ let rec expr_parser s =
   | _ -> raise X_syntax_error
  and cond_expr_parser s =
   match s with
-  (*| Pair(Symbol("cond"), Pair(Pair(Symbol("else"),else_rib), Nil)) -> raise X_not_yet_implemented*) (*DON'T THINK I NEED THIS*)
   | Pair(Symbol("cond"), Pair(Pair(Symbol("else"),else_rib), rest_ribs)) -> 
      (expr_parser (Pair(Symbol("begin"), else_rib)))
   | Pair(Symbol("cond"), Pair(Pair(test,Pair(Symbol("=>"),Pair(dit,Nil))),Nil)) -> 
-  (expr_parser (Pair(Symbol("let"),Pair(Pair(Pair(Symbol("value"), Pair(test,Nil)), Pair(Pair(Symbol("f"), Pair(Pair(Symbol("lambda"),Pair(Nil,Pair(dit,Nil))),Nil)),Nil))
+    (expr_parser (Pair(Symbol("let"),Pair(Pair(Pair(Symbol("value"), Pair(test,Nil)), Pair(Pair(Symbol("f"), Pair(Pair(Symbol("lambda"),Pair(Nil,Pair(dit,Nil))),Nil)),Nil))
     ,Pair(Pair(Symbol("if"), Pair(Symbol("value"), Pair(Pair(Pair(Symbol("f"),Nil),Pair(Symbol("value"),Nil)),Nil)))
     ,Nil)))))
-  | Pair(Symbol("cond"), Pair(Pair(test,Pair(Symbol("=>"),Pair(dit,Nil))),rest_ribs)) ->
-    (expr_parser (Pair(Symbol("let"),Pair(Pair(Pair(Symbol("value"), Pair(test,Nil)), Pair(Pair(Symbol("f"), Pair(Pair(Symbol("lambda"),Pair(Nil,Pair(dit,Nil))),Nil)),Nil))
-    ,Pair(Pair(Symbol("if"), Pair(Symbol("value"), Pair(Pair(Pair(Symbol("f"),Nil),Pair(Symbol("value"),Nil)),Pair(Pair(Symbol("cond"), rest_ribs) , Nil)))),Nil)))))
+  | Pair(Symbol("cond"), Pair(Pair(test,Pair(Symbol("=>"),Pair(dit,Nil))),rest_ribs)) -> 
+    (expr_parser (Pair(Symbol("let"),Pair(Pair(Pair(Symbol("value"), Pair(test,Nil)), Pair(Pair(Symbol("f"), Pair(Pair(Symbol("lambda"),Pair(Nil,Pair(dit,Nil))),Nil)),Pair(Pair(Symbol("rest"),Pair(Pair(Symbol("lambda"),Pair(Nil,Pair(Pair(Symbol("cond"),rest_ribs),Nil))),Nil)),Nil)))
+    ,Pair(Pair(Symbol("if"), Pair(Symbol("value"), Pair(Pair(Pair(Symbol("f"),Nil),Pair(Symbol("value"),Nil)),Pair(Pair(Symbol("rest"),Nil),Nil))))
+    ,Nil)))))  
   | Pair(Symbol("cond"), Pair(Pair(test,dit), Nil)) ->
      (expr_parser (Pair(Symbol("if"), Pair(test, Pair(Pair(Symbol("begin"),dit), Nil)))))
   | Pair(Symbol("cond"), Pair(Pair(test,dit), rest_ribs)) ->
