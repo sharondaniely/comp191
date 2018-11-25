@@ -54,6 +54,7 @@ module type TAG_PARSER = sig
   val tag_parse_expression : sexpr -> expr
   val tag_parse_expressions : sexpr list -> expr list
   val expr_parser : sexpr -> expr (*TODO DON'T FORGET TO REMOVE*)
+
 end;; (* signature TAG_PARSER *)
 
 module Tag_Parser : TAG_PARSER = struct
@@ -101,7 +102,7 @@ let rec expr_parser s =
   | Pair(Symbol("let*"), x) -> (expr_let_star_parser s)
   | Pair(Symbol("letrec"), x) -> (expr_letrec_parser s)
   | Pair(Symbol("and"), x) -> (and_expr_parser x)
-  (*| Pair(Symbol("quasiquote"), Pair(x , Nil)) -> (quasiquote_expr_parser x) (*TODO WRITE THIS FUNCTION*)*)
+  | Pair(Symbol("quasiquote"), Pair(x , Nil)) -> (expr_parser (quasiquote_expr_parser x))
   | Pair(a , b) -> Applic((expr_parser a) , (nested_pair_sexpr_to_list b))
   | _ -> raise X_syntax_error
  and or_expr_parser x =
@@ -179,6 +180,21 @@ let rec expr_parser s =
   | Pair(Symbol("cond"), Pair(Pair(test,dit), rest_ribs)) ->
      (expr_parser (Pair(Symbol("if"), Pair(test , Pair(Pair(Symbol("begin"),dit) , Pair(Pair(Symbol("cond"), rest_ribs) , Nil))))))
   | _ -> raise X_syntax_error
+ and quasiquote_expr_parser x =
+  match x with
+  | Pair(Symbol("unquote"), Pair(sexpr , Nil)) -> sexpr
+  | Pair(Symbol("unquote-splicing"),Pair(sexpr,Nil)) -> raise X_syntax_error
+  | Nil -> Pair(Symbol("quote"),Pair(Nil,Nil))
+  | Symbol(y) -> Pair(Symbol("quote"),Pair(Symbol(y),Nil))
+  | Vector(y) -> Pair(Symbol("vector"),(list_into_pairs (List.map quasiquote_expr_parser y)))
+  | Pair(Pair(Symbol("unquote-splicing"),Pair(sexpr,Nil)),b) -> Pair(Symbol("append"),Pair(sexpr,Pair((quasiquote_expr_parser b),Nil)))
+  | Pair(a,Pair(Symbol("unquote-splicing"),Pair(sexpr,Nil))) -> Pair(Symbol("cons"),Pair((quasiquote_expr_parser a),Pair(sexpr,Nil)))
+  | Pair(a,b) -> Pair(Symbol("cons"),Pair((quasiquote_expr_parser a), Pair((quasiquote_expr_parser b),Nil)))
+  | _ -> x
+ and list_into_pairs lst =
+  match lst with
+  | [] -> Nil
+  | _ -> (List.fold_right (fun a b -> Pair (a,b)) lst Nil)
  and extract_vars_from_args args_list =
   match args_list with
   | Pair(Pair(Symbol(x),a),b) -> List.append [x] (extract_vars_from_args b)
@@ -219,5 +235,8 @@ let rec expr_parser s =
 
 let tag_parse_expression sexpr = 
   (expr_parser sexpr)
+
+let tag_parse_expressions sexpr =
+  (List.map tag_parse_expression sexpr)
 
 end;; (* struct Tag_Parser *)
