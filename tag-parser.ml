@@ -53,7 +53,6 @@ exception X_syntax_error;;
 module type TAG_PARSER = sig
   val tag_parse_expression : sexpr -> expr
   val tag_parse_expressions : sexpr list -> expr list
-  val expr_parser : sexpr -> expr (*TODO DON'T FORGET TO REMOVE*)
 
 end;; (* signature TAG_PARSER *)
 
@@ -67,12 +66,6 @@ let reserved_word_list =
 
 (* work on the tag parser starts here *)
 
-
-
-let tag_parse_expressions sexpr = raise X_not_yet_implemented;;
-
-(*TODO DON'T FORGET TO CHECK THERE ARE UNIQE NAMES FOR ARGS - LAMBDA*)
-(*TODO TAKE CARE OF UNQUOTE ONLY INSIDE QUASIQOUTE*)
 
 let rec expr_parser s =
   match s with
