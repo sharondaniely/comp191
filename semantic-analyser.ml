@@ -92,9 +92,36 @@ let rec lexical e plst blst =
   | [] -> Var'(VarFree(str))
   | h :: t -> if (List.mem str h) then Var'(VarBound(str, index, (index_in_lst str h))) else (bound_or_free str t (index+1));; 
   
-let annotate_lexical_addresses e = (lexical e [] [])  
+
+let rec tail_calls e in_tp =
+  match e with
+  | Const'(e)-> Const'(e)
+  | If' (exp1 , exp2, exp3) ->  If'( (tail_calls exp1 false) , (tail_calls exp2 in_tp) , (tail_calls exp3 in_tp))
+  | Seq' (expr_lst) ->  Seq' (List.append [ List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last expr_lst) ] [(tail_calls (list_last_element expr_lst) in_tp)]) 
+  | Def' (exp1 , exp2) -> Def' ((tail_calls exp1 in_tp), (tail_calls exp2 in_tp))
+  | Or' (expr_lst)-> Or' (List.append [ List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last exp_lst) ] [(tail_calls (list_last_element) in_tp)]) 
+  | LambdaSimple' (vars, exp)-> LambdaSimple' (vars, (tail_calls exp true))
+  | LambdaOpt' (str_lst, str, exp)-> LambdaOpt'(str_lst, str , (tail_calls exp true))
+  | Var' (str) -> Var' (str) (*TODO do we need to add var to tjis function*)
+  | Applic'(exp, exp_lst)-> if in_tp 
+                                then ApplicTP'((tail_calls exp in_tp), (List.append [ List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last exp_lst) ] [(tail_calls (list_last_element) in_tp)]))
+                                else ApplicTP'((tail_calls exp in_tp), (List.append [ List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last exp_lst) ] [(tail_calls (list_last_element) in_tp)]))
+  |_-> raise X_syntax_error                              
  
-let annotate_tail_calls e = raise X_not_yet_implemented;;
+
+  and list_last_element lst =
+  match lst with
+  | [] -> []
+  | _ -> (List.hd (List.rev lst))
+  and list_excepte_last lst=
+  match lst with
+  | []-> []
+  | _-> (List.rev (List.tl (List. rev lst)))
+  ;;
+
+let annotate_lexical_addresses e = (lexical e [] []) ;;
+ 
+let annotate_tail_calls e = (tail_calls e false);;
 
 let box_set e = raise X_not_yet_implemented;;
 
