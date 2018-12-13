@@ -75,6 +75,7 @@ let rec lexical e plst blst =
   | If(exp1, exp2, exp3) -> If'((lexical exp1 plst blst), (lexical exp2 plst blst), (lexical exp3 plst blst))
   | Seq(exp_lst) -> Seq'((List.map (fun (exp) -> (lexical exp plst blst)) exp_lst))
   | Def(exp1, exp2) -> Def'((lexical exp1 plst blst), (lexical exp2 plst blst))
+  | Set(exp1, exp2) -> Set'((lexical exp1 plst blst), (lexical exp2 plst blst))
   | Or(expr_lst) -> Or'((List.map (fun (exp) -> (lexical exp plst blst)) expr_lst))
   | Applic(exp, expr_lst) -> Applic'((lexical exp plst blst), (List.map (fun (exp1)-> (lexical exp1 plst blst)) expr_lst))
   | LambdaSimple(str_lst, exp) -> LambdaSimple'(str_lst, (lexical exp str_lst (plst::blst)))
