@@ -322,7 +322,7 @@ let rec tail_calls e in_tp =
   | If' (exp1 , exp2, exp3) ->  If'( (tail_calls exp1 false) , (tail_calls exp2 in_tp) , (tail_calls exp3 in_tp))
   | Seq' (expr_lst) ->  Seq' ((List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last expr_lst))@ [(tail_calls (list_last_element expr_lst) in_tp)]) 
   | Def' (exp1 , exp2) -> Def' ((tail_calls exp1 in_tp), (tail_calls exp2 in_tp))
-  | Set' (exp1 , exp2) -> Set' ((tail_calls exp1 in_tp), (tail_calls exp2 in_tp))
+  | Set' (exp1 , exp2) -> Set' ((tail_calls exp1 in_tp), (tail_calls exp2 false))
   | Or' (expr_lst)-> Or' (  (List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last expr_lst))@[(tail_calls (list_last_element expr_lst) in_tp)]) 
   | LambdaSimple' (vars, exp)-> LambdaSimple' (vars, (tail_calls exp true))
   | LambdaOpt' (str_lst, str, exp)-> LambdaOpt'(str_lst, str , (tail_calls exp true))
