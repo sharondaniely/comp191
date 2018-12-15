@@ -135,7 +135,7 @@ let rec box e =
   | h :: t -> if (num = h) then (contain_another_num num t) else true
   and just_for_test str lambda counter_ref is_first same_str = (* TODO DON'T FORGET TO REMOVE*)
   match lambda with
-  | LambdaSimple'(str_lst, exp) -> (get_read_lst str exp counter_ref is_first same_str) 
+  | LambdaSimple'(str_lst, exp) -> (get_write_lst str exp counter_ref is_first same_str) 
   | _ -> raise X_syntax_error
   and get_read_lst str exp counter_ref is_first same_str =
     match exp with
@@ -185,7 +185,44 @@ let rec box e =
   (* TODO WOULD PROBABLY NOT NEED TO DEAL WITH BOX SET BOX GET AND BOX BUT IF WOULD THEN PROBABLY LEAVE THEM THE SAME*)
   | _ -> raise X_syntax_error
   and get_write_lst str exp counter_ref is_first same_str =
-    raise X_syntax_error
+    match exp with
+  | Const'(c) -> []
+  | If'(exp1, exp2, exp3) -> 
+      (get_write_lst str exp1 counter_ref is_first same_str)@(get_write_lst str exp2 counter_ref is_first same_str)@(get_write_lst str exp3 counter_ref is_first same_str) 
+  | Seq'(exp_lst) ->
+    (List.fold_left (fun a b -> List.append a b) [] (List.map (fun (exp1) -> (get_write_lst str exp1 counter_ref is_first same_str))exp_lst)) 
+  | Def'(exp1, exp2) -> raise X_syntax_error
+  | Set'(Var'(VarBound(str1,index1,index2)),exp1) -> 
+     if ((str = str1) && same_str)
+     then [!counter_ref]@(get_write_lst str exp1 counter_ref is_first same_str)
+     else (get_write_lst str exp1 counter_ref is_first same_str)
+  | Set'(Var'(VarParam(str1,index)),exp1) ->  
+    if ((str1 = str) && is_first)
+    then [0]@(get_write_lst str exp1 counter_ref is_first same_str)
+    else (get_write_lst str exp1 counter_ref is_first same_str)
+  | Set'(exp1, exp2) -> 
+    (get_write_lst str exp1 counter_ref is_first same_str)@(get_write_lst str exp2 counter_ref is_first same_str)
+  | Or'(exp_lst) ->
+    (List.fold_left (fun a b -> List.append a b) [] (List.map (fun (exp1) -> (get_write_lst str exp1 counter_ref is_first same_str))exp_lst)) 
+  | Var'(var) -> []
+  | Applic'(exp1, exp_lst) ->
+    (get_write_lst str exp1 counter_ref is_first same_str)@(List.fold_left (fun a b -> List.append a b) [] (List.map (fun (exp2) -> (get_write_lst str exp2 counter_ref is_first same_str))exp_lst))
+  | ApplicTP'(exp1, exp_lst) -> 
+    (get_write_lst str exp1 counter_ref is_first same_str)@(List.fold_left (fun a b -> List.append a b) [] (List.map (fun (exp2) -> (get_write_lst str exp2 counter_ref is_first same_str))exp_lst))
+  | LambdaSimple'(str_lst, exp1) -> 
+    if is_first
+    then (get_write_lst str exp1 (get_new_counter_ref counter_ref) false (not(List.mem str str_lst)))
+    else if same_str
+         then (get_write_lst str exp1 counter_ref is_first (not(List.mem str str_lst)))
+         else (get_write_lst str exp1 counter_ref is_first same_str)
+  | LambdaOpt'(str_lst, str1, exp1) -> 
+    if is_first
+    then (get_write_lst str exp1 (get_new_counter_ref counter_ref) false (not(List.mem str (str_lst@[str1]))))
+    else if same_str
+         then (get_write_lst str exp1 counter_ref is_first (not(List.mem str (str_lst@[str1]))))
+         else (get_write_lst str exp1 counter_ref is_first same_str)
+  (* TODO WOULD PROBABLY NOT NEED TO DEAL WITH BOX SET BOX GET AND BOX BUT IF WOULD THEN PROBABLY LEAVE THEM THE SAME*)
+  | _ -> raise X_syntax_error
   and box_lambda_and_send_recursivly lambda lst =
   (*TODO THIS FUNCTION CHANGES THE BODY OF THE LAMBDA ACCORDING TO INSTRUCTIONS IN THE FORUM AND SEND TO THE BOX FUNCTION RECURSIVLY*)
     raise X_syntax_error;;
