@@ -63,7 +63,8 @@ module type SEMANTICS = sig
   val annotate_lexical_addresses : expr -> expr'
   val annotate_tail_calls : expr' -> expr'
   val box_set : expr' -> expr'
-  val just_for_test : string -> expr' -> int ref -> bool -> bool -> int list
+  val just_for_test : string -> expr' -> string (*TODO DON'T FORGET TO REMOVE *)
+  
 end;;
 
 module Semantics : SEMANTICS = struct
@@ -106,12 +107,14 @@ let rec box e =
   | Def'(exp1, exp2) -> Def'((box exp1), (box exp2))
   | Set'(exp1, exp2) -> Set'((box exp1), (box exp2))
   | Or'(exp_lst) -> Or'((List.map (fun (exp) -> (box exp)) exp_lst))
-  | Var'(var) -> Var'(var)
+  | Var'(v) -> Var'(v)
   | Applic'(exp, exp_lst) -> Applic'((box exp), (List.map (fun (exp1) -> (box exp1)) exp_lst))
   | ApplicTP'(exp, exp_lst) -> ApplicTP'((box exp), (List.map (fun (exp1) -> (box exp1)) exp_lst))
   | LambdaSimple'(str_lst, exp) -> (box_for_lambdas e)
   | LambdaOpt'(str_lst, str, exp) -> (box_for_lambdas e)
-  (* TODO WOULD PROBABLY NEED TO DEAL WITH BOX SET BOX GET AND BOX PROBABLY LEAVE THEM THE SAME*)
+  | Box'(v) -> Box'(v)
+  | BoxGet'(v) -> BoxGet'(v)
+  | BoxSet'(v, exp) -> BoxSet'(v,(box exp))
   | _ -> raise X_syntax_error
  and box_for_lambdas lambda =
   match lambda with
@@ -121,9 +124,10 @@ let rec box e =
         (box_lambda_and_send_recursivly lambda (List.map (fun (str1) -> (should_be_boxed str1 exp)) str_lst@[str]))
    | _ -> raise X_syntax_error
    and should_be_boxed str lambda_body =
-    let index = {contents = 0} in
-    let read_lst = (get_read_lst str lambda_body index true true) in
-    let write_lst = (get_write_lst str lambda_body index true true) in
+    let index1 = {contents = 0} in
+    let index2 = {contents = 0} in
+    let read_lst = (get_read_lst str lambda_body index1 true true) in
+    let write_lst = (get_write_lst str lambda_body index2 true true) in
     let ans_lst1 = (List.map (fun (num) -> (contain_another_num num write_lst)) read_lst) in
     let ans_lst2 = (List.map (fun (num) -> (contain_another_num num read_lst)) write_lst) in
     if ((List.mem true ans_lst1) || (List.mem true ans_lst2))
@@ -133,9 +137,9 @@ let rec box e =
     match lst with
   | [] -> false
   | h :: t -> if (num = h) then (contain_another_num num t) else true
-  and just_for_test str lambda counter_ref is_first same_str = (* TODO DON'T FORGET TO REMOVE*)
+  and just_for_test str lambda = (* TODO DON'T FORGET TO REMOVE*)
   match lambda with
-  | LambdaSimple'(str_lst, exp) -> (get_write_lst str exp counter_ref is_first same_str) 
+  | LambdaSimple'(str_lst, exp) -> (should_be_boxed str exp)
   | _ -> raise X_syntax_error
   and get_read_lst str exp counter_ref is_first same_str =
     match exp with
@@ -182,7 +186,9 @@ let rec box e =
     else if same_str
          then (get_read_lst str exp1 counter_ref is_first (not(List.mem str (str_lst@[str1]))))
          else (get_read_lst str exp1 counter_ref is_first same_str)
-  (* TODO WOULD PROBABLY NOT NEED TO DEAL WITH BOX SET BOX GET AND BOX BUT IF WOULD THEN PROBABLY LEAVE THEM THE SAME*)
+  | Box'(v) -> []
+  | BoxGet'(v) -> []
+  | BoxSet'(v, exp1) -> (get_read_lst str exp1 counter_ref is_first same_str) (*TODO NOT SURE IF IT'S RIGHT*)
   | _ -> raise X_syntax_error
   and get_write_lst str exp counter_ref is_first same_str =
     match exp with
@@ -221,12 +227,68 @@ let rec box e =
     else if same_str
          then (get_write_lst str exp1 counter_ref is_first (not(List.mem str (str_lst@[str1]))))
          else (get_write_lst str exp1 counter_ref is_first same_str)
-  (* TODO WOULD PROBABLY NOT NEED TO DEAL WITH BOX SET BOX GET AND BOX BUT IF WOULD THEN PROBABLY LEAVE THEM THE SAME*)
+  | Box'(v) -> []
+  | BoxGet'(v) -> []
+  | BoxSet'(v, exp1) -> (get_write_lst str exp1 counter_ref is_first same_str) (*TODO NOT SURE IF IT'S RIGHT*)
   | _ -> raise X_syntax_error
   and box_lambda_and_send_recursivly lambda lst =
-  (*TODO THIS FUNCTION CHANGES THE BODY OF THE LAMBDA ACCORDING TO INSTRUCTIONS IN THE FORUM AND SEND TO THE BOX FUNCTION RECURSIVLY*)
-    raise X_syntax_error;;
-
+  (*TODO THIS FUNCTION CHANGES THE BODY OF THE LAMBDA ACCORDING TO INSTRUCTIONS IN THE FORUM AND SEND (the body?) TO THE BOX FUNCTION RECURSIVLY*)
+  (* regarding how to change the body of the lambda i need to add in the begining the set' expr's according to the lst
+  and then i need to traverse the tree with a same_str bool and change the apperances of the var and set according to instructions*)
+  (*needs to be done for each one of the strs by itself, probably from the end of the list to the begining so i will rev both lists *)
+match lambda with
+   | LambdaSimple'(str_lst, exp) -> 
+        let first_changed_body = (new_body exp str_lst lst)
+   | LambdaOpt'(str_lst, str, exp) -> 
+        let first_changed_body = (new_body exp (str_lst@[str]) lst)
+   | _ -> raise X_syntax_error
+  and new_body old_body arg_lst should_be_boxed_lst =
+   match should_be_boxed_lst with
+   | [] -> old_body
+   | h :: t -> if (h = "true")
+               then (new_body (change_body (List.hd arg_lst) old_body true) (List.tl arg_lst) t)
+               else (new_body old_body (List.tl arg_lst) t)
+  and change_body str old_body same_str=
+   match old_body with
+  | Const'(c) -> Const'(c)
+  | If'(exp1, exp2, exp3) -> 
+     If'((change_body str exp1 same_str),(change_body str exp2 same_str), (change_body str exp3 same_str)) 
+  | Seq'(exp_lst) ->
+     Seq'((List.map (fun (exp1) -> (change_body str exp1 same_str))exp_lst)) 
+  | Def'(exp1, exp2) -> raise X_syntax_error
+  | Set'(Var'(VarBound(str1,index1,index2)),exp1) -> 
+    if ((str = str1) && same_str)
+    then BoxSet'(VarBound(str1,index1,index2),(change_body str exp1 same_str))
+    else Set'(Var'(VarBound(str1,index1,index2)),(change_body str exp1 same_str))
+  | Set'(Var'(VarParam(str1,index)),exp1) ->
+    if ((str1 = str) && same_str)
+    then (BoxSet'(VarParam(str1,index),(change_body str exp1 same_str)))
+    else (Set'(Var'(VarParam(str1,index)),(change_body str exp1 same_str)))
+  | Set'(exp1, exp2) -> 
+    Set'((change_body str exp1 same_str), (change_body str exp2 same_str))
+  | Or'(exp_lst) ->
+     Or'((List.map (fun (exp1) -> (change_body str exp1 same_str))exp_lst))
+  | Var'(VarFree(str1)) -> Var'(VarFree(str1))
+  | Var'(VarBound(str1, index1, index2)) ->
+    if ((str = str1) && same_str)
+    then BoxGet'(VarBound(str1, index1, index2))
+    else Var'(VarBound(str1, index1, index2)) 
+  | Var'(VarParam(str1, index)) ->
+    if ((str1 = str) && same_str)
+    then BoxGet'(VarParam(str1, index))
+    else Var'(VarParam(str1,index))
+  | Applic'(exp1, exp_lst) ->
+     Applic'((change_body str exp1 same_str), (List.map (fun (exp2) -> (change_body str exp2 same_str))exp_lst))
+  | ApplicTP'(exp1, exp_lst) -> 
+     ApplicTP'((change_body str exp1 same_str), (List.map (fun (exp2) -> (change_body str exp2 same_str))exp_lst))
+  | LambdaSimple'(str_lst, exp1) -> 
+     LambdaSimple'(str_lst, (change_body str exp1 (not(List.mem str str_lst))))
+  | LambdaOpt'(str_lst, str1, exp1) -> 
+    LambdaOpt'(str_lst, str1, (change_body str exp1 (not(List.mem str (str_lst@[str1])))))
+  | Box'(v) -> Box'(v)
+  | BoxGet'(v) -> BoxGet'(v)
+  | BoxSet'(v, exp1) -> BoxSet'(v,(change_body str exp1 same_str)) (*TODO I'M NOT SURE OF THIS IS RIGHT *)
+  | _ -> raise X_syntax_error;;
   
 
 (*let rec tail_calls e in_tp =
