@@ -71,9 +71,7 @@ module type SEMANTICS = sig
   val annotate_lexical_addresses : expr -> expr'
   val annotate_tail_calls : expr' -> expr'
   val box_set : expr' -> expr'
-  val just_for_test : string -> expr' -> string (*TODO DON'T FORGET TO REMOVE *)
   
-  (*val just_for_test : string -> expr' -> int ref -> bool -> bool -> int list*) (*TODO DELETE comment*)
   val test : string -> expr'  (*TODO delete*)
 end;;
 
@@ -147,10 +145,6 @@ let rec box e =
     match lst with
   | [] -> false
   | h :: t -> if (num = h) then (contain_another_num num t) else true
-  and just_for_test str lambda = (* TODO DON'T FORGET TO REMOVE*)
-  match lambda with
-  | LambdaSimple'(str_lst, exp) -> (should_be_boxed str exp)
-  | _ -> raise X_syntax_error
   and get_read_lst str exp counter_ref is_first same_str =
     match exp with
   | Const'(c) -> []
@@ -249,21 +243,36 @@ let rec box e =
 match lambda with
    | LambdaSimple'(str_lst, exp) -> 
       let first_changed_body = (new_body exp str_lst lst) in
-      let second_changed_body = (new_body2 exp str_lst lst) in
-      LambdaSimple'(str_lst, (box first_changed_body)) (* TODO CHANGE TO SECOND *)
+      let addition_to_body = Seq'((body_begin str_lst str_lst lst)) in
+      let second_changed_body = (newbody2 first_changed_body addition_to_body) in
+      LambdaSimple'(str_lst, (box second_changed_body))
    | LambdaOpt'(str_lst, str, exp) -> 
       let first_changed_body = (new_body exp (str_lst@[str]) lst) in
-      let second_changed_body = (new_body2 exp (str_lst@[str]) lst) in
-      LambdaOpt'(str_lst,str, (box first_changed_body)) (*TODO CHANGE TO SECOND *)
+      let addition_to_body = Seq'((body_begin (str_lst@[str]) (str_lst@[str]) lst)) in
+      let second_changed_body = (newbody2 first_changed_body addition_to_body) in
+      LambdaOpt'(str_lst,str, (box second_changed_body))
    | _ -> raise X_syntax_error
-  and new_body2 old_body arg_lst should_be_boxed lst =
-   raise X_syntax_error
+  and newbody2 body begin_body =
+  match begin_body with
+  | Seq'([]) -> body
+  | Seq'(exp_lst) -> Seq'(exp_lst@[body])
+  | _ -> raise X_syntax_error
+  and body_begin original_arg_lst arg_lst should_be_boxed_lst =
+   match should_be_boxed_lst with
+  | [] -> []
+  | h :: t -> if (h = "true")
+              then ([Set'(Var'(VarParam((List.hd arg_lst),(index_in_lst (List.hd arg_lst) original_arg_lst))),Box'(VarParam((List.hd arg_lst), (index_in_lst (List.hd arg_lst) original_arg_lst))))]@(body_begin original_arg_lst (List.tl arg_lst) t))
+              else (body_begin original_arg_lst (List.tl arg_lst) t)
   and new_body old_body arg_lst should_be_boxed_lst =
    match should_be_boxed_lst with
    | [] -> old_body
    | h :: t -> if (h = "true")
                then (new_body (change_body (List.hd arg_lst) old_body true) (List.tl arg_lst) t)
                else (new_body old_body (List.tl arg_lst) t)
+  and index_in_lst str lst =
+   match lst with
+    | [] -> raise X_syntax_error
+    | h :: t -> if str = h then 0 else 1 + (index_in_lst str t)
   and change_body str old_body same_str=
    match old_body with
   | Const'(c) -> Const'(c)
