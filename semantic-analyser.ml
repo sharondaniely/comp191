@@ -129,7 +129,7 @@ let rec box e =
    | LambdaSimple'(str_lst, exp) -> 
         (box_lambda_and_send_recursivly lambda (List.map (fun (str) -> (should_be_boxed str exp)) str_lst))
    | LambdaOpt'(str_lst, str, exp) -> 
-        (box_lambda_and_send_recursivly lambda (List.map (fun (str1) -> (should_be_boxed str1 exp)) str_lst@[str]))
+        (box_lambda_and_send_recursivly lambda (List.map (fun (str1) -> (should_be_boxed str1 exp)) (str_lst@[str])))
    | _ -> raise X_syntax_error
    and should_be_boxed str lambda_body =
     let index1 = {contents = 0} in
