@@ -95,14 +95,15 @@ let rec lexical e plst blst =
 
 let rec tail_calls e in_tp =
   match e with
-  | Const'(e)-> Const'(e)
+  | Const'(exp)-> Const'(exp)
   | If' (exp1 , exp2, exp3) ->  If'( (tail_calls exp1 false) , (tail_calls exp2 in_tp) , (tail_calls exp3 in_tp))
   | Seq' (expr_lst) ->  Seq' ((List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last expr_lst))@ [(tail_calls (list_last_element expr_lst) in_tp)]) 
   | Def' (exp1 , exp2) -> Def' ((tail_calls exp1 in_tp), (tail_calls exp2 in_tp))
+  | Set' (exp1 , exp2) -> Set' ((tail_calls exp1 in_tp), (tail_calls exp2 in_tp))
   | Or' (expr_lst)-> Or' (  (List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last expr_lst))@[(tail_calls (list_last_element expr_lst) in_tp)]) 
   | LambdaSimple' (vars, exp)-> LambdaSimple' (vars, (tail_calls exp true))
   | LambdaOpt' (str_lst, str, exp)-> LambdaOpt'(str_lst, str , (tail_calls exp true))
-  | Var' (str) -> Var' (str) (*TODO do we need to add var to tjis function*)
+  | Var' (var) -> Var' (var) (*TODO do we need to add var to tjis function*)
   | Applic'(exp, exp_lst)-> if in_tp 
                                 then ApplicTP'((tail_calls exp in_tp), (List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last exp_lst))@[(tail_calls (list_last_element exp_lst) in_tp)])
                                 else Applic'((tail_calls exp in_tp), (List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last exp_lst))@[(tail_calls (list_last_element exp_lst) in_tp)])
@@ -111,7 +112,7 @@ let rec tail_calls e in_tp =
 
   and list_last_element lst =
   match lst with
-  | [] -> 
+  | [] -> Const'(Nil)
   | _ -> (List.hd (List.rev lst))
   and list_excepte_last lst=
   match lst with
