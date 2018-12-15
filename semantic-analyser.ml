@@ -238,10 +238,16 @@ let rec box e =
   (*needs to be done for each one of the strs by itself, probably from the end of the list to the begining so i will rev both lists *)
 match lambda with
    | LambdaSimple'(str_lst, exp) -> 
-        let first_changed_body = (new_body exp str_lst lst)
+        let first_changed_body = (new_body exp str_lst lst) in
+        let second_changed_body = (new_body2 exp str_lst lst) in
+        LambdaSimple'(str_lst, (box second_changed_body))
    | LambdaOpt'(str_lst, str, exp) -> 
-        let first_changed_body = (new_body exp (str_lst@[str]) lst)
+        let first_changed_body = (new_body exp (str_lst@[str]) lst) in
+        let second_changed_body = (new_body2 exp str_lst@[str] lst) in
+        LambdaOpt'(str_lst, (box second_changed_body))
    | _ -> raise X_syntax_error
+  and new_body2 old_body arg_lst should_be_boxed lst =
+   raise X_syntax_error
   and new_body old_body arg_lst should_be_boxed_lst =
    match should_be_boxed_lst with
    | [] -> old_body
