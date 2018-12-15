@@ -6,6 +6,14 @@
 
 #use "tag-parser.ml";;
 
+
+
+
+open PC;;(*TODO delete*)
+open Reader;;(*TODO delete*)
+open Tag_Parser;;(*TODO delete*)
+
+
 type var = 
   | VarFree of string
   | VarParam of string * int
@@ -65,6 +73,8 @@ module type SEMANTICS = sig
   val box_set : expr' -> expr'
   val just_for_test : string -> expr' -> string (*TODO DON'T FORGET TO REMOVE *)
   
+  (*val just_for_test : string -> expr' -> int ref -> bool -> bool -> int list*) (*TODO DELETE comment*)
+  val test : string -> expr'  (*TODO delete*)
 end;;
 
 module Semantics : SEMANTICS = struct
@@ -295,46 +305,46 @@ match lambda with
   | BoxGet'(v) -> BoxGet'(v)
   | BoxSet'(v, exp1) -> BoxSet'(v,(change_body str exp1 same_str)) (*TODO I'M NOT SURE OF THIS IS RIGHT *)
   | _ -> raise X_syntax_error;;
+(**test *)
   
-
-(*let rec tail_calls e in_tp =
+let rec tail_calls e in_tp =
   match e with
-  | Const'(e)-> Const'(e)
+  | Const'(exp)-> Const'(exp)
   | If' (exp1 , exp2, exp3) ->  If'( (tail_calls exp1 false) , (tail_calls exp2 in_tp) , (tail_calls exp3 in_tp))
   | Seq' (expr_lst) ->  Seq' ((List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last expr_lst))@ [(tail_calls (list_last_element expr_lst) in_tp)]) 
   | Def' (exp1 , exp2) -> Def' ((tail_calls exp1 in_tp), (tail_calls exp2 in_tp))
+  | Set' (exp1 , exp2) -> Set' ((tail_calls exp1 in_tp), (tail_calls exp2 in_tp))
   | Or' (expr_lst)-> Or' (  (List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last expr_lst))@[(tail_calls (list_last_element expr_lst) in_tp)]) 
   | LambdaSimple' (vars, exp)-> LambdaSimple' (vars, (tail_calls exp true))
   | LambdaOpt' (str_lst, str, exp)-> LambdaOpt'(str_lst, str , (tail_calls exp true))
-  | Var' (str) -> Var' (str) (*TODO do we need to add var to tjis function*)
+  | Var' (var) -> Var' (var) (*TODO do we need to add var to tjis function*)
   | Applic'(exp, exp_lst)-> if in_tp 
-                                then ApplicTP'((tail_calls exp in_tp), (List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last exp_lst))@[(tail_calls (list_last_element exp_lst) in_tp)])
-                                else Applic'((tail_calls exp in_tp), (List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last exp_lst))@[(tail_calls (list_last_element exp_lst) in_tp)])
+                                then ApplicTP'((tail_calls exp in_tp), (List.map (fun (elm)-> (tail_calls elm false)) exp_lst ))
+                                else Applic'((tail_calls exp in_tp), (List.map (fun (elm)-> (tail_calls elm false))  exp_lst))
   |_-> raise X_syntax_error                              
- 
-
-  and list_last_element lst =
-  match lst with
-  | [] -> 
-  | _ -> (List.hd (List.rev lst))
-  and list_excepte_last lst=
-  match lst with
-  | []-> Nil
-  | _-> (List.rev (List.tl (List. rev lst)))
+  and list_last_element lst =  (List.hd (List.rev lst))
+  and list_excepte_last lst= (List.rev (List.tl (List. rev lst)))
   ;;
-*)
+
 
 let annotate_lexical_addresses e = (lexical e [] []) ;;
  
-(*let annotate_tail_calls e = (tail_calls e false);;*)
+let annotate_tail_calls e = (tail_calls e false);;
 
-let annotate_tail_calls e = raise X_syntax_error;; (* TODO DON'T FORGET TO DELETE *)
 
-let box_set e = (box e);;
+
+let box_set e = (box e) ;;
+
 
 let run_semantics expr =
   box_set
     (annotate_tail_calls
        (annotate_lexical_addresses expr));;
   
+
+let test str =
+  (annotate_tail_calls
+       (annotate_lexical_addresses 
+          (tag_parse_expression
+            (read_sexpr str))));;
 end;; (* struct Semantics *)
