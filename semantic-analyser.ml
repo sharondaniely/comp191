@@ -192,7 +192,7 @@ let rec box e =
          else (get_read_lst str exp1 counter_ref is_first same_str)
   | Box'(v) -> []
   | BoxGet'(v) -> []
-  | BoxSet'(v, exp1) -> (get_read_lst str exp1 counter_ref is_first same_str) (*TODO NOT SURE IF IT'S RIGHT*)
+  | BoxSet'(v, exp1) -> (get_read_lst str exp1 counter_ref is_first same_str)
   | _ -> raise X_syntax_error
   and get_write_lst str exp counter_ref is_first same_str =
     match exp with
@@ -233,13 +233,9 @@ let rec box e =
          else (get_write_lst str exp1 counter_ref is_first same_str)
   | Box'(v) -> []
   | BoxGet'(v) -> []
-  | BoxSet'(v, exp1) -> (get_write_lst str exp1 counter_ref is_first same_str) (*TODO NOT SURE IF IT'S RIGHT*)
+  | BoxSet'(v, exp1) -> (get_write_lst str exp1 counter_ref is_first same_str) 
   | _ -> raise X_syntax_error
   and box_lambda_and_send_recursivly lambda lst =
-  (*TODO THIS FUNCTION CHANGES THE BODY OF THE LAMBDA ACCORDING TO INSTRUCTIONS IN THE FORUM AND SEND (the body?) TO THE BOX FUNCTION RECURSIVLY*)
-  (* regarding how to change the body of the lambda i need to add in the begining the set' expr's according to the lst
-  and then i need to traverse the tree with a same_str bool and change the apperances of the var and set according to instructions*)
-  (*needs to be done for each one of the strs by itself, probably from the end of the list to the begining so i will rev both lists *)
 match lambda with
    | LambdaSimple'(str_lst, exp) -> 
       let first_changed_body = (new_body exp str_lst lst) in
@@ -316,7 +312,7 @@ match lambda with
     else LambdaOpt'(str_lst, str1, (change_body str exp1 same_str))
   | Box'(v) -> Box'(v)
   | BoxGet'(v) -> BoxGet'(v)
-  | BoxSet'(v, exp1) -> BoxSet'(v,(change_body str exp1 same_str)) (*TODO I'M NOT SURE OF THIS IS RIGHT *)
+  | BoxSet'(v, exp1) -> BoxSet'(v,(change_body str exp1 same_str))
   | _ -> raise X_syntax_error;;
 (**test *)
   
