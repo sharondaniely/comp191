@@ -298,9 +298,13 @@ match lambda with
   | ApplicTP'(exp1, exp_lst) -> 
      ApplicTP'((change_body str exp1 same_str), (List.map (fun (exp2) -> (change_body str exp2 same_str))exp_lst))
   | LambdaSimple'(str_lst, exp1) -> 
-     LambdaSimple'(str_lst, (change_body str exp1 (not(List.mem str str_lst))))
+    if same_str
+    then LambdaSimple'(str_lst, (change_body str exp1 (not(List.mem str str_lst))))
+    else LambdaSimple'(str_lst, (change_body str exp1 same_str))
   | LambdaOpt'(str_lst, str1, exp1) -> 
-    LambdaOpt'(str_lst, str1, (change_body str exp1 (not(List.mem str (str_lst@[str1])))))
+    if same_str
+    then LambdaOpt'(str_lst, str1, (change_body str exp1 (not(List.mem str (str_lst@[str1])))))
+    else LambdaOpt'(str_lst, str1, (change_body str exp1 same_str))
   | Box'(v) -> Box'(v)
   | BoxGet'(v) -> BoxGet'(v)
   | BoxSet'(v, exp1) -> BoxSet'(v,(change_body str exp1 same_str)) (*TODO I'M NOT SURE OF THIS IS RIGHT *)
