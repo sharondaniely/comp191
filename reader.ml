@@ -198,18 +198,24 @@ let hex_integer_parser s = PC.pack
 
 (***************************INTEGER FLOAT******************************* *)
 
+
+let natural_parser_float s   =
+let natural_helper = PC.plus digit_parser in
+let packed_natural_parser = PC.pack natural_helper (fun (temp)-> (list_to_string temp)) in
+packed_natural_parser s;;
+
 let dot_parser s = PC.pack (PC.char '.') (fun (temp)-> temp) s;;
 
 let not_siged_flaot_parser s = 
-    PC.pack (PC.caten not_signed_integer_parser (PC.caten dot_parser natural_parser))
-    (fun (temp)-> float_of_string( (string_of_int (fst temp))^ "." ^ string_of_int(snd(snd(temp)))))
+    PC.pack (PC.caten not_signed_integer_parser (PC.caten dot_parser natural_parser_float))
+    (fun (temp)-> float_of_string( (string_of_int (fst temp))^ "." ^ (snd(snd(temp)))))
     s;;
 
 let siged_flaot_parser s = 
-    PC.pack (caten sign_parser (caten natural_parser (caten dot_parser natural_parser)))
+    PC.pack (caten sign_parser (caten natural_parser (caten dot_parser natural_parser_float)))
     (fun (temp)-> if  ((fst temp) = '-')
-                  then (-1.0)*. float_of_string((string_of_int(fst(snd temp)))^ "." ^ (string_of_int(snd(snd(snd(temp))))))
-                  else  float_of_string((string_of_int(fst(snd temp)))^ "." ^ (string_of_int(snd(snd(snd(temp))))))) 
+                  then (-1.0)*. float_of_string((string_of_int(fst(snd temp)))^ "." ^ (snd(snd(snd(temp)))))
+                  else  float_of_string((string_of_int(fst(snd temp)))^ "." ^ (snd(snd(snd(temp))))))
     s;;
 
 let float_parser s = PC.pack 
