@@ -8,12 +8,6 @@
 
 
 
-
-open PC;;(*TODO delete*)
-open Reader;;(*TODO delete*)
-open Tag_Parser;;(*TODO delete*)
-
-
 type var = 
   | VarFree of string
   | VarParam of string * int
@@ -71,8 +65,6 @@ module type SEMANTICS = sig
   val annotate_lexical_addresses : expr -> expr'
   val annotate_tail_calls : expr' -> expr'
   val box_set : expr' -> expr'
-  
-  val test : string -> expr'  (*TODO delete*)
 end;;
 
 module Semantics : SEMANTICS = struct
@@ -123,7 +115,8 @@ let rec box e =
   | Box'(v) -> Box'(v)
   | BoxGet'(v) -> BoxGet'(v)
   | BoxSet'(v, exp) -> BoxSet'(v,(box exp))
-  | _ -> raise X_syntax_error
+  | _-> raise X_syntax_error
+
  and box_for_lambdas lambda =
   match lambda with
    | LambdaSimple'(str_lst, exp) -> 
@@ -193,7 +186,7 @@ let rec box e =
   | Box'(v) -> []
   | BoxGet'(v) -> []
   | BoxSet'(v, exp1) -> (get_read_lst str exp1 counter_ref is_first same_str)
-  | _ -> raise X_syntax_error
+  | _-> raise X_syntax_error
   and get_write_lst str exp counter_ref is_first same_str =
     match exp with
   | Const'(c) -> []
@@ -234,7 +227,7 @@ let rec box e =
   | Box'(v) -> []
   | BoxGet'(v) -> []
   | BoxSet'(v, exp1) -> (get_write_lst str exp1 counter_ref is_first same_str) 
-  | _ -> raise X_syntax_error
+  | _-> raise X_syntax_error
   and box_lambda_and_send_recursivly lambda lst =
 match lambda with
    | LambdaSimple'(str_lst, exp) -> 
@@ -313,8 +306,8 @@ match lambda with
   | Box'(v) -> Box'(v)
   | BoxGet'(v) -> BoxGet'(v)
   | BoxSet'(v, exp1) -> BoxSet'(v,(change_body str exp1 same_str))
-  | _ -> raise X_syntax_error;;
-(**test *)
+  | _-> raise X_syntax_error;;
+
   
 let rec tail_calls e in_tp =
   match e with
@@ -326,7 +319,7 @@ let rec tail_calls e in_tp =
   | Or' (expr_lst)-> Or' (  (List.map (fun (elm)-> (tail_calls elm false)) (list_excepte_last expr_lst))@[(tail_calls (list_last_element expr_lst) in_tp)]) 
   | LambdaSimple' (vars, exp)-> LambdaSimple' (vars, (tail_calls exp true))
   | LambdaOpt' (str_lst, str, exp)-> LambdaOpt'(str_lst, str , (tail_calls exp true))
-  | Var' (var) -> Var' (var) (*TODO do we need to add var to tjis function*)
+  | Var' (var) -> Var' (var) 
   | Applic'(exp, exp_lst)-> if in_tp 
                                 then ApplicTP'((tail_calls exp in_tp), (List.map (fun (elm)-> (tail_calls elm false)) exp_lst ))
                                 else Applic'((tail_calls exp in_tp), (List.map (fun (elm)-> (tail_calls elm false))  exp_lst))
@@ -350,10 +343,4 @@ let run_semantics expr =
     (annotate_tail_calls
        (annotate_lexical_addresses expr));;
   
-
-let test str =
-  (annotate_tail_calls
-       (annotate_lexical_addresses 
-          (tag_parse_expression
-            (read_sexpr str))));;
 end;; (* struct Semantics *)
