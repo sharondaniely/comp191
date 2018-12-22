@@ -322,8 +322,8 @@ let rec tail_calls e in_tp =
   | LambdaOpt' (str_lst, str, exp)-> LambdaOpt'(str_lst, str , (tail_calls exp true))
   | Var' (var) -> Var' (var) 
   | Applic'(exp, exp_lst)-> if in_tp 
-                                then ApplicTP'((tail_calls exp in_tp), (List.map (fun (elm)-> (tail_calls elm false)) exp_lst ))
-                                else Applic'((tail_calls exp in_tp), (List.map (fun (elm)-> (tail_calls elm false))  exp_lst))
+                                then ApplicTP'((tail_calls exp false), (List.map (fun (elm)-> (tail_calls elm false)) exp_lst ))
+                                else Applic'((tail_calls exp false), (List.map (fun (elm)-> (tail_calls elm false))  exp_lst))
   |_-> raise X_syntax_error                              
   and list_last_element lst =  (List.hd (List.rev lst))
   and list_excepte_last lst= (List.rev (List.tl (List. rev lst)))
