@@ -120,7 +120,6 @@ let rec box e =
   | Box'(v) -> Box'(v)
   | BoxGet'(v) -> BoxGet'(v)
   | BoxSet'(v, exp) -> BoxSet'(v,(box exp))
-  | _-> raise X_syntax_error
 
  and box_for_lambdas lambda =
   match lambda with
@@ -191,7 +190,6 @@ let rec box e =
   | Box'(v) -> []
   | BoxGet'(v) -> []
   | BoxSet'(v, exp1) -> (get_read_lst str exp1 counter_ref is_first same_str)
-  | _-> raise X_syntax_error
   and get_write_lst str exp counter_ref is_first same_str =
     match exp with
   | Const'(c) -> []
@@ -232,7 +230,6 @@ let rec box e =
   | Box'(v) -> []
   | BoxGet'(v) -> []
   | BoxSet'(v, exp1) -> (get_write_lst str exp1 counter_ref is_first same_str) 
-  | _-> raise X_syntax_error
   and box_lambda_and_send_recursivly lambda lst =
 match lambda with
    | LambdaSimple'(str_lst, exp) -> 
@@ -311,7 +308,6 @@ match lambda with
   | Box'(v) -> Box'(v)
   | BoxGet'(v) -> BoxGet'(v)
   | BoxSet'(v, exp1) -> BoxSet'(v,(change_body str exp1 same_str))
-  | _-> raise X_syntax_error;;
 
   
 let rec tail_calls e in_tp =
