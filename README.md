@@ -1,10 +1,8 @@
-# Scheme-To-Cisc-Compiler
+# Scheme-To-Cisc-Compiler written in Ocaml language
 
 A compiler which compiles Scheme programs to cisc-like architecture assembly through most of the compiling stages.
 
 The development of this compiler was done in pairs as part of multiple assignments in "Compiler Principles" course, by the guidance of the lecturer Dr. Goldberg Mayer, at Ben-Gurion University in the fall of 2019.
-
-Note: this repository demonstrates a lot of great ideas. For now, a brief explaination of the implementation is covered here. A fully detailed description of the implementation can be found in the assignments descriptions attached.
 
 Every compiling stage uses the last stage output as its input.</br>
 The stages of this process is as follows:
@@ -28,9 +26,6 @@ The copiler generates the final assembly code.
 
 ## Etc.
 
-Some more minor exercises that are part of the assignment attached: 
-* remww.scm 
-* sce.scm
 
 ## Getting Started
 ### Prerequisites
@@ -61,11 +56,6 @@ Some more minor exercises that are part of the assignment attached:
 
 ## Useful links
 
-* The original sources of the assignment: 
-	[part 1](https://www.cs.bgu.ac.il/comp191/wiki.files/hw1.pdf)
-	[part 2](https://www.cs.bgu.ac.il/comp191/wiki.files/hw2.pdf)
-	[part 3](https://www.cs.bgu.ac.il/comp191/wiki.files/hw3.pdf)
-	[part 4](https://www.cs.bgu.ac.il/comp191/wiki.files/proj.pdf)
 * https://en.wikipedia.org/wiki/Complex_instruction_set_computer
 * https://en.wikipedia.org/wiki/Assembly_language
 * https://en.wikipedia.org/wiki/Compiler
